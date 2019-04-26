@@ -27,38 +27,56 @@ libclang = ctypes.cdll.LoadLibrary(libclang_loc)
 # CursorKind.OBJC_CLASS_REF
 # CursorKind.OBJC_IVAR_DECL
 
-class MessageExpr(ctypes.Structure):
-    _fields_ = []
-
 Cursor.__hash__ = libclang.clang_hashCursor
         
-
 Config.set_library_file(libclang_loc)
 index = Index.create()
 
 loc = "/users/williamwisdom/trialxp/framework/trial/TRIClient.m"
 changed_loc = "/users/williamwisdom/trialxp/framework/trial/TRIClientChanged.m"
-size = os.stat(loc).st_size
-changed_size = os.stat(changed_loc).st_size
 
-client_tu = index.parse(loc)
-full_extent = client_tu.get_extent(loc, (0, size))
-includes = list(client_tu.get_includes()) # all includes of all depth. Doesn't appear to include Foundation?
-tokens = list(client_tu.get_tokens(extent=full_extent))
-cursors = []
-for token in tokens:
-    if token.cursor not in cursors:
-        cursors.append(token.cursor) # yes O(N^2)
+def get_funcs(loc):
+    client_tu = index.parse(loc)
+    return get_cursor_funcs(client_tu.cursor, loc)
+    
+def get_cursor_funcs(cursor, file=None):
+    func_cursors = []
+    for sub_cursor in cursor.get_children():
+        if file != None and file not in get_files(sub_cursor): continue 
+        if is_func_cursor(sub_cursor): func_cursors.append(sub_cursor)
+        else:
+            func_cursors.extend(get_cursor_funcs(sub_cursor, file))
+    return func_cursors
 
-changed_tu = index.parse(changed_loc)
-changed_tokens = list(changed_tu.get_tokens(extent=changed_tu.get_extent(changed_loc, (0, changed_size))))
-changed_cursors = []
-for token in changed_tokens:
-    if token.cursor not in changed_cursors:
-        changed_cursors.append(token.cursor) # yes O(N^2)
+def get_files(cursor):
+    return set([str(token.location.file) for token in cursor.get_tokens()])
 
+def is_func_cursor(cursor):
+    return cursor.kind.value in (16, 17)
 
-class_methods = [token for token in tokens if token.cursor.kind.value == 17] # OBJC_CLASS_METHOD_DECL
-instance_methods = [token for token in tokens if token.cursor.kind.value == 16]
-implementations = [token for token in tokens if token.cursor.kind.value == 16]
-instance_method_usrs = set(token.cursor.get_usr() for token in instance_methods)
+def get_total_spelling(cursor):
+    return ''.join(token.spelling for token in cursor.get_tokens() if token.kind.value != 4)
+
+def changed_funcs(loc, changed_loc):
+    orig_funs_map = {func.spelling : get_total_spelling(func) for func in get_funcs(loc)}
+    changed_locs_funs = get_funcs(changed_loc)
+    changed_funs_map = {func.spelling : get_total_spelling(func) for func in changed_locs_funs}
+    new_funs = []
+    changed_funs = []
+    for func in changed_locs_funs:
+        if func.spelling not in orig_funs_map:
+            new_funs.append(func)
+        elif orig_funs_map[func.spelling] != changed_funs_map[func.spelling]:
+            changed_funs.append(func)
+    return new_funs, changed_funs
+
+def print_diffs(loc, changed_loc):
+    r = changed_funcs(loc, changed_loc)
+    if r[0]:
+        print("New funcs: ")
+        for a in r[0]:
+            print(a.spelling)
+    if r[1]:
+        print("Changed funcs: ")
+        for a in r[1]:
+            print(f"Func {a.spelling} is now {get_total_spelling(a)}")
