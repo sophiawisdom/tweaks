@@ -6,28 +6,7 @@ import ctypes
 from clang.cindex import Index, Config, Cursor
 
 libclang_loc = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib"
-libclang = ctypes.cdll.LoadLibrary(libclang_loc)
-
-# kinds we often come across:
-# CursorKind.TYPE_REF
-# CursorKind.COMPOUND_STMT
-# CursorKind.OBJC_MESSAGE_EXPR
-# CursorKind.OBJC_INSTANCE_METHOD_DECL
-# CursorKind.MEMBER_REF_EXPR
-# CursorKind.OBJC_CLASS_METHOD_DECL
-# CursorKind.OBJC_IMPLEMENTATION_DECL
-# CursorKind.VAR_DECL
-# CursorKind.RETURN_STMT
-# CursorKind.PARM_DECL
-# CursorKind.IF_STMT
-# CursorKind.DECL_STMT
-# CursorKind.OBJ_SELF_EXPR
-# CursorKind.DECL_REF_EXPR
-# CursorKind.INVALID_FILE
-# CursorKind.OBJC_CLASS_REF
-# CursorKind.OBJC_IVAR_DECL
-
-Cursor.__hash__ = libclang.clang_hashCursor
+#Cursor.__hash__ = libclang.clang_hashCursor
         
 Config.set_library_file(libclang_loc)
 index = Index.create()
