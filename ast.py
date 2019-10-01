@@ -7,7 +7,7 @@ from collections import defaultdict
 import threading
 import git
 import time
-from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError
+from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError, CursorKind
 
 libclang_loc = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib"
 if not Config.loaded:
@@ -58,7 +58,7 @@ def is_func_cursor(cursor):
 
 
 def get_total_spelling(cursor):
-    return ''.join(token.spelling for token in cursor.get_tokens() if token.kind.value != 4)
+    return '\n'.join(token.spelling for token in cursor.get_tokens() if token.kind.value != 4)
 
 
 def changed_funcs(orig_funcs, new_funcs):
@@ -173,7 +173,11 @@ class Differ:
 
     def parse_all_implementation_files(self):
         ''' Find all implementation (.m) files and parse them with clang. '''
-        # Takes about one second on ProactiveAppPrediction
+        # Takes about six seconds on ProactiveAppPrediction, because of git stuff.
+        # without git stuff, it takes one second. Also, takes longer each time.
+        # It would make sense if it took longer the first time because it was
+        # freeing memory or something, but it takes longer each time. Why?
+        # This persists even across new differs. Weird!
         implementation_files = self.get_implementation_files()
         curr_threads = []
         parsed_tus = {}
@@ -186,7 +190,7 @@ class Differ:
             # we use threading and not multiprocessing because the we don't have a memory
             # efficient pickling mechanism for arbitrary clang data structures. We
             # can turn things into ASTs, but that takes a lot of memory and is expensive.
-            while len(curr_threads) >= os.cpu_count()*1.5:
+            while len(curr_threads) >= os.cpu_count()*4:
                 curr_threads = [thread for thread in curr_threads if thread.is_alive()]
                 time.sleep(0.02)
             thread = threading.Thread(
@@ -200,20 +204,18 @@ class Differ:
 
         self.parsed_tus = parsed_tus
 
-    def new_object_files(self, old_branch=None, new_branch=None):
+    def new_object_files(self):
         ''' old_branch is the branch the binary we want to change was built
 with for the new branch. If new_branch is None, then the current working tree
 is used. Produces a list of diffs in the code that should be re-looked at. '''
-        old_loc = self.repo.commit(old_branch) if old_branch != None else self.repo.index
-        new_loc = self.repo.commit(new_branch) if new_branch != None else None
-        code_diffs = [diff for diff in old_loc.diff(new_loc) if diff.b_path.endswith(".m") or diff.a_path.endswith(".h")]
+        code_diffs = [diff for diff in self.original_commit.diff(None) if diff.b_path.endswith(".m") or diff.a_path.endswith(".h")]
         return [diff for diff in code_diffs if not diff.deleted_file]
 
     def paired_tus(self, old_branch=None, new_branch=None):
         # TODO - replace these arguments with arguments for an old branch
         # passed at instantion of the object. Then the TUs are parsed once for
         # the old commit.
-        diffs = self.new_object_files(old_branch, new_branch)
+        diffs = self.new_object_files()
         # Assume that every file defines one class
         dependencies = self.get_dependencies_parsed()
 
@@ -227,7 +229,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
                 # Don't compile headers
                 file_changes[new_path] = old_path
             if old_path in dependencies:
-                for dependent in dependencies:
+                for dependent in dependencies[old_path]:
                     file_changes[dependent] = dependent # reparse a file because dependencies changed
 
         tu_pairs = []
@@ -236,10 +238,88 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
             assert old_path is None or old_path in self.parsed_tus
             old_tu = None if old_path is None else self.parsed_tus[old_path]
             new_tu = index.parse(new_path)
-            tu_pairs.append((new_tu, old_tu))
+            tu_pairs.append((old_tu, new_tu))
             
         return tu_pairs
-        
+
+    def get_classes_for_tu(self, tu):
+        classes = []
+        for cursor in tu.cursor.get_children():
+            if cursor.kind == CursorKind.OBJC_IMPLEMENTATION_DECL:
+                classes.append(cursor)
+        return classes
+
+    def get_classes(self, old_tu, new_tu):
+        old_classes = self.get_classes_for_tu(old_tu)
+        new_classes = self.get_classes_for_tu(new_tu)
+        paired_classes = []
+        for new_class in new_classes:
+            for old_class in old_classes:
+                if old_class.spelling == new_class.spelling:
+                    paired_classes.append((old_class, new_class))
+                    break
+            else:
+                paired_classes.append((None, new_class))
+        return paired_classes
+
+    def decls_equal(self, first_decl, second_decl):
+        # For some reason, even ivar declarations or the like aren't compared
+        # as equal. However, if they have the same tokens, then they're the
+        # same text, which is close enough.
+        return get_total_spelling(first_decl) == get_total_spelling(second_decl)
+
+    def get_class_differences(self, old_class, new_class):
+        # Delete is important because it could help people realize when
+        # something is broken, even if not strictly necessary.
+
+        deleted_decls = []
+        new_decls = []
+        changed_decls = []
+        # Rename is delete + new
+
+        old_cls_decls = {cursor.spelling: cursor for cursor in old_class.get_children()}
+        new_cls_decls = {cursor.spelling: cursor for cursor in new_class.get_children()}
+        for new_decl_name, new_decl in new_cls_decls.items():
+            if new_decl_name not in old_cls_decls:
+                new_decls.append(new_decl)
+                continue
+            if not self.decls_equal(new_decl, old_cls_decls[new_decl_name]):
+                changed_decls.append(new_decl)
+            # If they're the same, no need to do anything
+
+        for old_decl_name, old_decl in old_cls_decls.items():
+            if old_decl_name not in new_cls_decls:
+                deleted_decls.append(old_decl)
+
+        return new_decls, deleted_decls, changed_decls
+
+    def get_differences(self):
+        paired_tus = self.paired_tus()
+        classes = []
+        for old_tu, new_tu in paired_tus:
+            classes.extend(repo.get_classes(old_tu, new_tu))
+        diffs_by_class = {clsses[1].spelling: self.get_class_differences(*clsses) for clsses in classes}
+        return diffs_by_class
+
+    def print_diffs(self):
+        diffs = self.get_differences()
+        for cls, diff in diffs.items():
+            if sum(len(d) for d in diff) == 0:
+                continue
+            print(f"Different decls for class {cls}:")
+            if diff[0]:
+                print("New Decls:")
+                for decl in diff[0]:
+                    print(str(decl))
+            if diff[1]:
+                print("Deleted Decls:")
+                for decl in diff[1]:
+                    print(str(decl))
+            if diff[2]:
+                print("Changed Decls:")
+                for decl in diff[2]:
+                    print(str(decl))
+            
 
     def get_dependencies_parsed(self):
         ''' For every .m file, find every other file it depends on, and so build a list of every file to what .m files it depends on.
