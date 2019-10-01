@@ -232,7 +232,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
 
         tu_pairs = []
         # Compare each old TU to each new TU
-        for new_path, old_path in tu_pairs.items():
+        for new_path, old_path in file_changes.items():
             assert old_path is None or old_path in self.parsed_tus
             old_tu = None if old_path is None else self.parsed_tus[old_path]
             new_tu = index.parse(new_path)
