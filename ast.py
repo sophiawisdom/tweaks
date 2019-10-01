@@ -72,7 +72,7 @@ def changed_funcs(orig_funcs, new_funcs):
         elif orig_funs_map[func.spelling] != changed_funs_map[func.spelling]:
             changed_funs.append(func)
     return new_funs, changed_funs
-
+ 
 
 def print_diffs(loc, changed_loc):
     r = changed_funcs(loc, changed_loc)
@@ -136,19 +136,38 @@ def git_files_to_reparse(repo, changed_branch, old_branch="master"):
     new_tus = [index.parse(k) for k in s]
 
 class Differ:
-    def __init__(self, repo_loc):
+    def __init__(self, repo_loc, original_branch):
         self.repo = git.Repo(repo_loc)
         self.repo_loc = repo_loc
-        self.parsed_tus = []
+        self.original_commit = self.repo.commit(original_branch)
+        self.parsed_tus = {}
 
     def get_implementation_files(self):
         implementation_files = []
 
-        # TODO - use git's list of files instead of making our own.
-        for subdir, dirnames, filenames in os.walk(self.repo_loc):
-            for file in filenames:
-                if is_implementation_file(file):
-                    implementation_files.append(os.path.join(subdir, file))
+        # Really want to use git.Tree.blobs to get this info, but
+        # it fails for unknown reasons so we have to use repo.git.ls_tree
+        # :(
+        tree_objects = self.repo.git.ls_tree("-r", self.original_commit.hexsha).split("\n")
+        for object in tree_objects:
+            # I don't like manual parsing like this but I'm doing it in order
+            # to preserve filenames with spaces and the like.
+            # mods type hash\tname
+            file_modifications = object.index(" ")
+            object = object[file_modifications + 1:]
+            
+            type_index = object.index(" ")
+            type = object[:type_index]
+            if type != "blob":
+                continue
+            object = object[type_index+1:]
+            
+            hexsha_index = object.index("\t")
+            hexsha = object[:hexsha_index]
+            filename = object[hexsha_index+1:]
+            if is_implementation_file(filename):
+                abs_path = os.path.join(self.repo_loc, filename)
+                implementation_files.append((abs_path, hexsha))
 
         return implementation_files
 
@@ -157,17 +176,22 @@ class Differ:
         # Takes about one second on ProactiveAppPrediction
         implementation_files = self.get_implementation_files()
         curr_threads = []
-        parsed_tus = []
+        parsed_tus = {}
+
+        def handle_thread(path, hexsha):
+            unsaved_files = [(path, self.repo.git.cat_file("-p", hexsha))]
+            parsed_tus[path] = index.parse(path, None, unsaved_files=unsaved_files)
+
         while implementation_files:
             # we use threading and not multiprocessing because the we don't have a memory
             # efficient pickling mechanism for arbitrary clang data structures. We
             # can turn things into ASTs, but that takes a lot of memory and is expensive.
             while len(curr_threads) >= os.cpu_count()*1.5:
                 curr_threads = [thread for thread in curr_threads if thread.is_alive()]
-                time.sleep(0.01)
+                time.sleep(0.02)
             thread = threading.Thread(
-                target=lambda file:parsed_tus.append(index.parse(file)),
-                args=(implementation_files.pop(),))
+                target=handle_thread,
+                args=implementation_files.pop())
             curr_threads.append(thread)
             thread.start()
 
@@ -185,21 +209,36 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
         code_diffs = [diff for diff in old_loc.diff(new_loc) if diff.b_path.endswith(".m") or diff.a_path.endswith(".h")]
         return [diff for diff in code_diffs if not diff.deleted_file]
 
-    def modified_translation_units(self, old_branch=None, new_branch=None):
+    def paired_tus(self, old_branch=None, new_branch=None):
+        # TODO - replace these arguments with arguments for an old branch
+        # passed at instantion of the object. Then the TUs are parsed once for
+        # the old commit.
         diffs = self.new_object_files(old_branch, new_branch)
         # Assume that every file defines one class
         dependencies = self.get_dependencies_parsed()
-        
-        modified_paths = []
+
+        # {new_path : old_path}. old_path can be found in self.parsed_tus. new_path will be reparsed and compared.
+        file_changes = {} # for deduping implementations that have multiple includes that have changed
         for diff in diffs:
-            old_path = os.path.join(self.repo_loc, diff.a_path)
+            old_path = os.path.join(self.repo_loc, diff.a_path) if diff.a_path else None
             new_path = os.path.join(self.repo_loc, diff.b_path)
-            if old_path in dependencies:
-                modified_paths.extend(dependencies[old_path])
+            # TODO - what happens if you change a .h file to a .m file?
             if new_path.endswith(".m"):
-                modified_paths.append(new_path)
+                # Don't compile headers
+                file_changes[new_path] = old_path
+            if old_path in dependencies:
+                for dependent in dependencies:
+                    file_changes[dependent] = dependent # reparse a file because dependencies changed
+
+        tu_pairs = []
+        # Compare each old TU to each new TU
+        for new_path, old_path in tu_pairs.items():
+            assert old_path is None or old_path in self.parsed_tus
+            old_tu = None if old_path is None else self.parsed_tus[old_path]
+            new_tu = index.parse(new_path)
+            tu_pairs.append((new_tu, old_tu))
             
-        return list(set(modified_paths))
+        return tu_pairs
         
 
     def get_dependencies_parsed(self):
@@ -209,9 +248,9 @@ set of changes.'''
         # Takes about .02 seconds on ProactiveAppPredictions
         all_includes = defaultdict(list) # {file: files that files includes}
 
-        for tu in self.parsed_tus:
+        for filename, tu in self.parsed_tus.items():
             for include in tu.get_includes():        
-                all_includes[include.include.name].append(tu.spelling)
+                all_includes[include.include.name].append(filename)
 
         return dict(all_includes)
 
