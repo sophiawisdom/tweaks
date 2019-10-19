@@ -39,7 +39,7 @@ int main() {
         }
     }
 
-    sleep(10);
+    sleep(5);
     printf("Resuming threads.\n");
     
     for (int i = 0; i < threadCount; i++) {
