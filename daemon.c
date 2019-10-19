@@ -14,7 +14,10 @@
 
 #include <mach/vm_map.h>
 
-#define MACH_CALL(kret) if (kret != 0) {printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));}
+#define MACH_CALL(kret, critical) if (kret != 0) {\
+printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));\
+if (critical) {exit(1);}\
+}
 
 unsigned char * readProcessMemory (task_t task, mach_vm_address_t addr, mach_msg_type_number_t *size) {
     vm_offset_t readMem;
@@ -41,13 +44,12 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     task_dyld_info_data_t task_dyld_info;
     mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
     
-    MACH_CALL(task_info(task, TASK_DYLD_INFO, (task_info_t)&task_dyld_info, &count));
+    MACH_CALL(task_info(task, TASK_DYLD_INFO, (task_info_t)&task_dyld_info, &count), FALSE);
     
     unsigned int dyld_all_image_infos_size = sizeof(struct dyld_all_image_infos);
     struct dyld_all_image_infos *dyldaii = (struct dyld_all_image_infos *) readProcessMemory(task, task_dyld_info.all_image_info_addr, &dyld_all_image_infos_size);
     
     
-    printf ("Version: %d, %d images at offset %p\n", dyldaii->version, dyldaii->infoArrayCount, dyldaii->infoArray);
     int imageCount = dyldaii->infoArrayCount;
     mach_msg_type_number_t dataCnt = imageCount * sizeof(struct dyld_image_info);
     unsigned char * readData = readProcessMemory(task, (mach_vm_address_t) dyldaii->infoArray, &dataCnt);
@@ -63,7 +65,6 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
         dataCnt = 1024;
         char *imageName = (char *) readProcessMemory (task, (mach_vm_address_t) dii[i].imageFilePath, &dataCnt);
         if (imageName) {
-            printf("Found image: %s\n", imageName);
             images[images_index].imageFilePath = imageName;
             images[images_index].imageLoadAddress = dii[i].imageLoadAddress;
             images_index++;
@@ -93,8 +94,7 @@ int pause_threads(task_t task) {
     
     int kret = task_threads(task, &threadList, &threadCount);
     if (kret!=KERN_SUCCESS) {
-        printf("task_threads() failed with error %d!\n", kret);
-        return -1;
+        return kret;
     }
     
     printf("Suspending threads.\n");
@@ -102,12 +102,11 @@ int pause_threads(task_t task) {
     for (int i = 0; i < threadCount; i++) {
         kret = thread_suspend((thread_t) threadList[i]);
         if (kret!=KERN_SUCCESS) {
-            printf("thread_suspend(%d) failed with error %d!\n", i, kret);
-            return -1;
+            return kret;
         }
     }
     
-    return 0;
+    return KERN_SUCCESS;
 }
 
 void printRegisterState(x86_thread_state64_t *thread_state) {
@@ -124,78 +123,36 @@ int get_symbol_offset(const char *dylib_path, const char *symbol_name) {
         return -1;
     }
     dlclose(handle);
-    printf("info fname is %s\n", info.dli_fname);
     return sym_loc - info.dli_fbase;
 }
 
-// 1a78
-
-int main(int argc, char **argv) {
-    int kret = 0;
-    mach_port_name_t task = MACH_PORT_NULL;
-    thread_act_port_array_t threadList;
-    mach_msg_type_number_t threadCount;
-    
-    int pid = 0;
-    if (argc > 1) {
-        pid = atoi(argv[1]);
-    }
-    if (pid == 0) {
-        printf("Input PID to pause: ");
-        scanf("%d", &pid);
-    }
-    
-    printf("PID is: %d\n", pid);
-
-    kret = task_for_pid(mach_task_self(), pid, &task);
-    if (kret != KERN_SUCCESS) {
-        printf("task_for_pid() failed with error %d!\n",kret);
-        exit(0);
-    }
-    
-    /*if (pause_threads(task) != 0) {
-        printf("pause_threads failed!\n");
-        exit(1);
-    }*/
+int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol, unsigned long long arg1, unsigned long long arg2, unsigned long long arg3) {
+    MACH_CALL(pause_threads(task), TRUE);
     
     int size = 0;
     struct dyld_image_info * dylibs = get_dylibs(task, &size);
-    printf("Got %d dylibs\n", size);
     if (dylibs == NULL) {
         printf("Getting dylibs failed.\n");
-        exit(1);
+        return -1;
     }
-    mach_vm_address_t libSystem_address = find_dylib(dylibs, size, "/usr/lib/system/libsystem_kernel.dylib");
-    printf("Got libsystem address\n");
-    if (libSystem_address == -1) {
+    
+    mach_vm_address_t dylib_address = find_dylib(dylibs, size, dylib);
+    if (dylib_address == -1) {
         printf("Getting libSystem_address failed\n");
-        exit(1);
+        return -1;
     }
     
-    int offset = get_symbol_offset("/usr/lib/system/libsystem_kernel.dylib", "write");
-    printf("Discovered offset to be %d. Regular one is %d.\n", offset, 0x1a78);
-    mach_vm_address_t write_address = libSystem_address + offset; // There's some kind of syscall for determining this, but I determined this with `nm -gU`
-    
-    printf("write_address is %p\n", (void *) write_address);
-    
+    int offset = get_symbol_offset(dylib, symbol);
+    mach_vm_address_t write_address = dylib_address + offset;
+        
     thread_act_t thread_port;
     // Create thread
-    MACH_CALL(thread_create(task, &thread_port));
-    printf("Created thread %d\n", thread_port);
+    MACH_CALL(thread_create(task, &thread_port), TRUE);
     
     vm_address_t stack_address;
     // Allocate stack
-    MACH_CALL(vm_allocate(task, &stack_address, 0x200000, TRUE)); // 2MB of stack
-    printf("Allocated stack at address %p\n", (void *)stack_address);
-    
-    vm_address_t play_memory;
-    MACH_CALL(vm_allocate(task, &play_memory, 0x800, TRUE)); // 2KB of scratch space
-    printf("Allocated 2KB of play memory at address %p\n", (void *)play_memory);
-    
-    char *sentence = "One small step for computer, etc. etc.\n";
-    int sentence_len = strlen(sentence);
-    vm_write(task, play_memory, (vm_offset_t) sentence, sentence_len);
-        
+    MACH_CALL(vm_allocate(task, &stack_address, 0x200000, TRUE), TRUE); // 2MB of stack
+
     x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
     
     printRegisterState(thread_state);
@@ -206,16 +163,45 @@ int main(int argc, char **argv) {
     thread_state -> __rip = write_address; // Address of write function in libSystem
     thread_state -> __cs = stack_address;
     
-    // ssize_t write(int fildes, const void *buf, size_t nbyte);
-    
+    // /usr/lib/system/libdyld.dylib -> dlopen
+        
     // Emulate C calling convention
-    thread_state -> __rdi = 1; // fildes = stdout
-    thread_state -> __rsi = play_memory; // buf = beginning of sentence
-    thread_state -> __rdx = sentence_len; // nbyte = sentence length
+    thread_state -> __rdi = arg1;
+    thread_state -> __rsi = arg2;
+    thread_state -> __rdx = arg3;
+    // TODO: do more of the C calling convention.
     
     printRegisterState(thread_state);
         
-    thread_set_state(thread_port, x86_THREAD_STATE64, (thread_state_t) thread_state, x86_THREAD_STATE64_COUNT);
+    MACH_CALL(thread_set_state(thread_port, x86_THREAD_STATE64, (thread_state_t) thread_state, x86_THREAD_STATE64_COUNT), TRUE);
     
-    thread_resume(thread_port);
+    // Could register traps to avoid?
+    MACH_CALL(thread_resume(thread_port), TRUE);
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    int pid = 0;
+    if (argc > 1) {
+        pid = atoi(argv[1]);
+    }
+    if (pid == 0) {
+        printf("Input PID to pause: ");
+        scanf("%d", &pid);
+    }
+    
+    printf("PID is: %d\n", pid);
+    
+    mach_port_name_t task = MACH_PORT_NULL;
+    MACH_CALL(task_for_pid(mach_task_self(), pid, &task), TRUE);
+    
+    vm_address_t play_memory;
+    MACH_CALL(vm_allocate(task, &play_memory, 0x800, TRUE), TRUE); // 2KB of scratch space
+    printf("Allocated 2KB of play memory at address %p\n", (void *)play_memory);
+    
+    char *sentence = "One small step for computer, etc. etc.\n";
+    int sentence_len = strlen(sentence);
+    MACH_CALL(vm_write(task, play_memory, (vm_offset_t) sentence, sentence_len), TRUE);
+    
+    execute_symbol_with_args(task, "/usr/lib/system/libsystem_kernel.dylib", "write", 1, play_memory, sentence_len);
 }
