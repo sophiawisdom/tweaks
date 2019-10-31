@@ -40,22 +40,29 @@ unsigned char * readProcessMemory (task_t task, mach_vm_address_t addr, mach_msg
 
 }
 
+
+/**
+ * Get all the dylibs in a task. dyld_image_info has a
+ */
 struct dyld_image_info * get_dylibs(task_t task, int *size) {
     task_dyld_info_data_t task_dyld_info;
     mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
     
     MACH_CALL(task_info(task, TASK_DYLD_INFO, (task_info_t)&task_dyld_info, &count), FALSE);
+    // If you call task_info with the TASK_DYLD_INFO flavor, it'll give you information about dyld - specifically, where is the struct
+    // that lists out the location of all the dylibs in the other process' memory. I think this can eventually be painfully discovered
+    // using mmap, but this way is much easier.
     
     unsigned int dyld_all_image_infos_size = sizeof(struct dyld_all_image_infos);
+    
+    // Every time there's a pointer, we have to read out the resulting data structure.
     struct dyld_all_image_infos *dyldaii = (struct dyld_all_image_infos *) readProcessMemory(task, task_dyld_info.all_image_info_addr, &dyld_all_image_infos_size);
     
     
     int imageCount = dyldaii->infoArrayCount;
     mach_msg_type_number_t dataCnt = imageCount * sizeof(struct dyld_image_info);
-    unsigned char * readData = readProcessMemory(task, (mach_vm_address_t) dyldaii->infoArray, &dataCnt);
+    unsigned char * dii = (struct dyld_image_info *) readProcessMemory(task, (mach_vm_address_t) dyldaii->infoArray, &dataCnt);
     if (!readData) { return NULL;}
-
-    struct dyld_image_info *dii = (struct dyld_image_info *) readData;
     
     // This one will only have images with a name
     struct dyld_image_info *images = (struct dyld_image_info *) malloc(dataCnt);
@@ -63,7 +70,7 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     
     for (int i = 0; i < imageCount; i++) {
         dataCnt = 1024;
-        char *imageName = (char *) readProcessMemory (task, (mach_vm_address_t) dii[i].imageFilePath, &dataCnt);
+        char *imageName = (char *) readProcessMemory(task, (mach_vm_address_t) dii[i].imageFilePath, &dataCnt);
         if (imageName) {
             images[images_index].imageFilePath = imageName;
             images[images_index].imageLoadAddress = dii[i].imageLoadAddress;
@@ -71,8 +78,8 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
         }
     }
     
-    // In theory we should be freeing readData and dyldaii, but it's not malloc'd, so I'd need to use mach_vm_deallocate, which I don't care about.
-    // I'm pretty sure this function leaks memory, but I'm not sure.
+    // In theory we should be freeing dii and dyldaii, but it's not malloc'd, so I'd need to use mach_vm_deallocate or something, which I don't care about.
+    // This function probably leaks memory, but I'm not super sure.
     
     *size = images_index;
     
@@ -102,6 +109,28 @@ int pause_threads(task_t task) {
     for (int i = 0; i < threadCount; i++) {
         kret = thread_suspend((thread_t) threadList[i]);
         if (kret!=KERN_SUCCESS) {
+            return kret;
+        }
+    }
+    
+    return KERN_SUCCESS;
+}
+
+int resume_threads(task_t task) {
+    thread_act_port_array_t threadList;
+    mach_msg_type_number_t threadCount;
+    
+    int kret = task_threads(task, &threadList, &threadCount);
+    if (kret!=KERN_SUCCESS) {
+        return kret;
+    }
+    
+    printf("Resuming threads.\n");
+    
+    for (int i = 0; i < threadCount; i++) {
+        kret = thread_resume((thread_t) threadList[i]);
+        if (kret!=KERN_SUCCESS) {
+            printf("Failed on thread %d (%d)\n", i, threadList[i]);
             return kret;
         }
     }
@@ -152,6 +181,7 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     vm_address_t stack_address;
     // Allocate stack
     MACH_CALL(vm_allocate(task, &stack_address, 0x200000, TRUE), TRUE); // 2MB of stack
+    stack_address += 0x200000; // Stack starts at top
 
     x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
     
@@ -162,9 +192,7 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     thread_state -> __rbp = stack_address; // Pretty sure we start out with rsp == rbp
     thread_state -> __rip = write_address; // Address of write function in libSystem
     thread_state -> __cs = stack_address;
-    
-    // /usr/lib/system/libdyld.dylib -> dlopen
-        
+            
     // Emulate C calling convention
     thread_state -> __rdi = arg1;
     thread_state -> __rsi = arg2;
@@ -175,8 +203,7 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
         
     MACH_CALL(thread_set_state(thread_port, x86_THREAD_STATE64, (thread_state_t) thread_state, x86_THREAD_STATE64_COUNT), TRUE);
     
-    // Could register traps to avoid?
-    MACH_CALL(thread_resume(thread_port), TRUE);
+    MACH_CALL(resume_threads(task), TRUE);
     return 0;
 }
 
