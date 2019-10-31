@@ -7,7 +7,7 @@ from collections import defaultdict
 import threading
 import git
 import time
-from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError, CursorKind
+from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError, CursorKind, SourceLocation, Token, SourceRange
 
 libclang_loc = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib"
 if not Config.loaded:
@@ -17,9 +17,39 @@ index = Index.create()
 Cursor.__iter__ = Cursor.get_children
 Cursor.__hash__ = lambda self: conf.lib.clang_hashCursor(self)
 Cursor.__str__ = lambda self: f'Cursor of kind {self.kind} with spelling {self.spelling}'
+Cursor.__getitem__ = lambda self, key: list(self.get_children())[key]
 
-loc = "/users/williamwisdom/trialxp/framework/trial/TRIClient.m"
-changed_loc = "/users/williamwisdom/trialxp/framework/trial/TRIClientChanged.m"
+
+def sourcerange_contains(self, other):
+    # does self contain other?
+
+    # same files. This isn't foolproof just a general check. Shouldn't be comparing against filenames
+    if self.start.file.name != other.start.file.name or self.end.file.name != other.end.file.name:
+        # print('False because files don't match')
+        return False
+
+    # self starts earlier
+    if self.start.line > other.start.line:
+        # print("False because other begins on an earlier line than self")
+        return False
+    elif self.start.line == other.start.line and self.start.column > other.start.column:
+        # print("False because other begins on the same line but an earlier column than self")
+        return False
+
+    # self ends later
+    if other.end.line > self.end.line:
+        # print("False because other ends at a later line than self")
+        return False
+    elif self.end.line == other.start.line and other.end.column > self.end.column:
+        # print("False because equal lines but other ends later than self")
+        return False
+
+    # print("true")
+    return True
+SourceRange.__contains__ = sourcerange_contains
+SourceRange.__str__ = lambda extent: f'({extent.start.line}, {extent.start.column}), ({extent.end.line}, {extent.end.column})'
+
+SourceLocation.__lt__ = lambda self, other: self.line < other.line or (self.line == other.line and self.column < other.column)
 
 def is_implementation_file(file): return file.endswith(".m")
 def is_code_file(file): return file.endswith(".h") or file.endswith(".m")
@@ -47,6 +77,59 @@ def get_all_cursors(cursor):
     for sub_cursor in cursor.get_children():
         cursors.extend(get_all_cursors(sub_cursor))
     return cursors
+
+def str_rep(t):
+	total = []
+	for a in t:
+		if isinstance(a, Token): total.append(a.spelling)
+		else: total.extend("\t" + b for b in str_rep(a))
+	return total
+
+# pap = Differ("/users/williamwisdom/proactiveappprediction", "dev/modavocado_yukon_b"); pap.parse_all_implementation_files(); g = pap.print_decl_diffs(); new_decl, old_decl = g['ATXInformationXPCManager'][2][0]; t = get_token_representation(new_decl)
+
+@dataclass
+class TreeNode:
+    def __init__(self, cursor, tokens):
+        self.cursor = cursor
+        self.tokens = tokens
+    def __str__(self):
+        return f"Node with cursor of type {cursor.kind} and tokens {'\n'.join(token.spelling) for token in tokens}"
+
+def get_token_representation(cursor):
+    token_tree = []
+    decl_iterator = cursor.get_children()
+    try:
+        curr_decl = next(decl_iterator)
+    except StopIteration:
+        return list(cursor.get_tokens()) # no subdecls
+    currently_in_decl = False # is the current token in a subdecl
+    for token in cursor.get_tokens():
+        # print(f'For token \"{token.spelling}\" at loc ({token.location.line}, {token.location.column}) in decl is {currently_in_decl} for decl {curr_decl}')
+        if currently_in_decl:
+            # print(f'token extent is {token.extent}. curr_decl is {curr_decl.extent}')
+            if token.extent in curr_decl.extent:
+                continue # subdecl will handle token
+            else:
+                # move on to new decl
+                # print(f'Moving on to new decl. Representation for subdecl is {str_rep(get_token_representation(curr_decl))}')
+                token_tree.append(get_token_representation(curr_decl))
+                currently_in_decl = False
+                try:
+                    curr_decl = next(decl_iterator)
+                except StopIteration:
+                    pass # currently_in_decl = False anyway, so no real harm
+
+        # print(f'token extent is {token.extent}. curr_decl is {curr_decl.extent}. in is {token.extent in curr_decl.extent}')
+        if token.extent in curr_decl.extent:
+            print(f'currently_in_decl is now true')
+            currently_in_decl = True # subdecl will handle, no need for appending to tree
+        else:
+            token_tree.append(TreeNode(cursor, [token]))
+
+    if currently_in_decl:
+        token_tree.append(get_token_representation(curr_decl))
+
+    return token_tree
 
 
 def get_files(cursor):
@@ -134,6 +217,7 @@ def git_files_to_reparse(repo, changed_branch, old_branch="master"):
     old_tus = [index.parse(k) for k in s]
     subprocess.getoutput(f"git checkout {changed_branch}")
     new_tus = [index.parse(k) for k in s]
+
 
 class Differ:
     def __init__(self, repo_loc, original_branch):
@@ -268,7 +352,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
         # same text, which is close enough.
         return get_total_spelling(first_decl) == get_total_spelling(second_decl)
 
-    def get_class_differences(self, old_class, new_class):
+    def get_class_differences(self, old_class, new_class, include_old_decls=False):
         # Delete is important because it could help people realize when
         # something is broken, even if not strictly necessary.
 
@@ -284,7 +368,10 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
                 new_decls.append(new_decl)
                 continue
             if not self.decls_equal(new_decl, old_cls_decls[new_decl_name]):
-                changed_decls.append(new_decl)
+                if include_old_decls:
+                    changed_decls.append((new_decl, old_cls_decls[new_decl_name]))
+                else:
+                    changed_decls.append(new_decl)
             # If they're the same, no need to do anything
 
         for old_decl_name, old_decl in old_cls_decls.items():
@@ -293,16 +380,16 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
 
         return new_decls, deleted_decls, changed_decls
 
-    def get_differences(self):
+    def get_differences(self, include_old_decls=False):
         paired_tus = self.paired_tus()
         classes = []
         for old_tu, new_tu in paired_tus:
-            classes.extend(repo.get_classes(old_tu, new_tu))
-        diffs_by_class = {clsses[1].spelling: self.get_class_differences(*clsses) for clsses in classes}
+            classes.extend(self.get_classes(old_tu, new_tu))
+        diffs_by_class = {clsses[1].spelling: self.get_class_differences(*clsses, include_old_decls) for clsses in classes}
         return diffs_by_class
 
-    def print_diffs(self):
-        diffs = self.get_differences()
+    def print_decl_diffs(self):
+        diffs = self.get_differences(include_old_decls=True)
         for cls, diff in diffs.items():
             if sum(len(d) for d in diff) == 0:
                 continue
@@ -319,7 +406,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
                 print("Changed Decls:")
                 for decl in diff[2]:
                     print(str(decl))
-            
+        return diffs
 
     def get_dependencies_parsed(self):
         ''' For every .m file, find every other file it depends on, and so build a list of every file to what .m files it depends on.
