@@ -87,14 +87,6 @@ def str_rep(t):
 
 # pap = Differ("/users/williamwisdom/proactiveappprediction", "dev/modavocado_yukon_b"); pap.parse_all_implementation_files(); g = pap.print_decl_diffs(); new_decl, old_decl = g['ATXInformationXPCManager'][2][0]; t = get_token_representation(new_decl)
 
-@dataclass
-class TreeNode:
-    def __init__(self, cursor, tokens):
-        self.cursor = cursor
-        self.tokens = tokens
-    def __str__(self):
-        return f"Node with cursor of type {cursor.kind} and tokens {'\n'.join(token.spelling) for token in tokens}"
-
 def get_token_representation(cursor):
     token_tree = []
     decl_iterator = cursor.get_children()
@@ -130,7 +122,6 @@ def get_token_representation(cursor):
         token_tree.append(get_token_representation(curr_decl))
 
     return token_tree
-
 
 def get_files(cursor):
     return set([str(token.location.file) for token in cursor.get_tokens()])
@@ -321,7 +312,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
         for new_path, old_path in file_changes.items():
             assert old_path is None or old_path in self.parsed_tus
             old_tu = None if old_path is None else self.parsed_tus[old_path]
-            new_tu = index.parse(new_path)
+            new_tu = index.parse(new_path) # TODO: consider using reparse on old_tu instead?
             tu_pairs.append((old_tu, new_tu))
             
         return tu_pairs
@@ -338,7 +329,7 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
         new_classes = self.get_classes_for_tu(new_tu)
         paired_classes = []
         for new_class in new_classes:
-            for old_class in old_classes:
+            for old_class in old_classes: # This is O(n^2), but n is probably 1.
                 if old_class.spelling == new_class.spelling:
                     paired_classes.append((old_class, new_class))
                     break
@@ -350,7 +341,10 @@ is used. Produces a list of diffs in the code that should be re-looked at. '''
         # For some reason, even ivar declarations or the like aren't compared
         # as equal. However, if they have the same tokens, then they're the
         # same text, which is close enough.
-        return get_total_spelling(first_decl) == get_total_spelling(second_decl)
+        for first_token, second_token in zip(first_decl.get_tokens(), second_decl.get_tokens()):
+            if first_token.spelling != second_token.spelling:
+                return False
+        return True
 
     def get_class_differences(self, old_class, new_class, include_old_decls=False):
         # Delete is important because it could help people realize when
