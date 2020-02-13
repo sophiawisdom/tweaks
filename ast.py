@@ -7,7 +7,7 @@ from collections import defaultdict
 import threading
 import git
 import time
-from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError, CursorKind, SourceLocation, Token, SourceRange
+from clang.cindex import Index, Config, Cursor, conf, TranslationUnitLoadError, CursorKind, SourceLocation, Token, SourceRange, TokenKind
 
 libclang_loc = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libclang.dylib"
 if not Config.loaded:
@@ -132,7 +132,7 @@ def is_func_cursor(cursor):
 
 
 def get_total_spelling(cursor):
-    return '\n'.join(token.spelling for token in cursor.get_tokens() if token.kind.value != 4)
+    return '\n'.join(token.spelling for token in cursor.get_tokens() if token.kind != TokenKind.COMMENT)
 
 
 def changed_funcs(orig_funcs, new_funcs):
@@ -414,6 +414,9 @@ set of changes.'''
                 all_includes[include.include.name].append(filename)
 
         return dict(all_includes)
+
+    def remove_comments(self, tokens):
+        return [token for token in tokens if token.kind != TokenKind.COMMENT]
 
 
 #m = parse_all_implementation_files("/users/williamwisdom/mail")

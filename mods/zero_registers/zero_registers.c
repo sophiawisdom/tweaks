@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
     mach_port_name_t task = MACH_PORT_NULL;
     thread_act_port_array_t threadList;
     mach_msg_type_number_t threadCount;
-    
+
     int pid = 0;
     if (argc > 1) {
         pid = atoi(argv[1]);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
         printf("Input PID to manipulate: ");
         scanf("%d", &pid);
     }
-    
+
     printf("PID is: %d\n", pid);
 
     kret = task_for_pid(mach_task_self(), pid, &task);
@@ -59,27 +59,27 @@ int main(int argc, char **argv) {
         printf("task_for_pid() failed with error %d!\n",kret);
         exit(0);
     }
-    
+
     kret = task_threads(task, &threadList, &threadCount);
     if (kret!=KERN_SUCCESS) {
         printf("task_threads() failed with error %d!\n", kret);
         exit(0);
     }
-    
+
     printf("Modifying registers\n");
-    
+
     for (int i = 0; i < threadCount; i++) {
         kret = thread_suspend((thread_t) threadList[i]);
         if (kret!=KERN_SUCCESS) {
             printf("thread_suspend(%d) failed with error %d!\n", i, kret);
             exit(0);
         }
-        
+
         // Flavors are defined here: https://purplefish.apple.com/index.php?action=search_cached&path=osfmk%2Fmach%2Fi386%2Fthread_status.h&version=xnu-6153.2.3&project=xnu&q=&language=all&index=Yukon line 104.
         // We use x86_THREAD_STATE64
-        
+
         // count: x86_THREAD_STATE64_COUNT
-        
+
         /**
          _STRUCT_X86_THREAD_STATE64
          {
@@ -126,13 +126,13 @@ int main(int argc, char **argv) {
             printf("thread_set_state(%d) failed with error %d!\n", i, kret);
             exit(0);
         }
-         
+
         kret = thread_resume((thread_t) threadList[i]);
         if (kret!=KERN_SUCCESS) {
             printf("thread_resume(%d) failed with error %d!\n", i, kret);
             exit(0);
         }
     }
-    
+
     printf("Registers modified\n");
 }
