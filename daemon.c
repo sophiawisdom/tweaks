@@ -24,12 +24,12 @@ unsigned char * readProcessMemory (task_t task, mach_vm_address_t addr, mach_msg
     vm_offset_t readMem;
     // Use vm_read, rather than mach_vm_read, since the latter is different
     // in iOS.
-
+    
     MACH_CALL(vm_read(task, // vm_map_t target_task,
                  addr,               // mach_vm_address_t address,
                  *size,              // mach_vm_size_t size
                  &readMem,           // vm_offset_t *data,
-                 size), FALSE);              // mach_msg_type_number_t *dataCnt
+                 size), TRUE);              // mach_msg_type_number_t *dataCnt
 
     return ( (unsigned char *) readMem);
 
@@ -58,13 +58,13 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     mach_msg_type_number_t dataCnt = imageCount * sizeof(struct dyld_image_info);
     struct dyld_image_info * dii = (struct dyld_image_info *) readProcessMemory(task, (mach_vm_address_t) dyldaii->infoArray, &dataCnt);
     if (!dii) { return NULL;}
-    
+
     // This one will only have images with a name
     struct dyld_image_info *images = (struct dyld_image_info *) malloc(dataCnt);
     int images_index = 0;
     
     for (int i = 0; i < imageCount; i++) {
-        dataCnt = 1024;
+        dataCnt = MAXPATHLEN;
         char *imageName = (char *) readProcessMemory(task, (mach_vm_address_t) dii[i].imageFilePath, &dataCnt);
         if (imageName) {
             images[images_index].imageFilePath = imageName;
@@ -134,10 +134,10 @@ int resume_threads(task_t task) {
 }
 
 void printRegisterState(x86_thread_state64_t *thread_state) {
-    printf("rax: %llx\trbx: %llx\trcx: %llx\trdx: %llx\trdi: %llx\trsi: %llx\trbp: %llx\trsp: %llx\tr8: %llx\tr9: %llx\tr10: %llx\tr11: %llx\tr12: %llx\tr13: %llx\tr14: %llx\tr15: %llx\n", thread_state -> __rax, thread_state -> __rbx, thread_state -> __rcx, thread_state -> __rdx, thread_state -> __rdi, thread_state -> __rsi, thread_state -> __rbp, thread_state -> __rsp, thread_state -> __r8, thread_state -> __r9, thread_state -> __r10, thread_state -> __r11, thread_state -> __r12, thread_state -> __r13, thread_state -> __r14, thread_state -> __r15);
+    printf("rax: %llx\trbx: %llx\trcx: %llx\trdx: %llx\trdi: %llx\trsi: %llx\trbp: %llx\trsp: %llx\tr8: %llx\tr9: %llx\tr10: %llx\tr11: %llx\tr12: %llx\tr13: %llx\tr14: %llx\tr15: %llx\trip: %llx\tgs: %llx\t\n", thread_state -> __rax, thread_state -> __rbx, thread_state -> __rcx, thread_state -> __rdx, thread_state -> __rdi, thread_state -> __rsi, thread_state -> __rbp, thread_state -> __rsp, thread_state -> __r8, thread_state -> __r9, thread_state -> __r10, thread_state -> __r11, thread_state -> __r12, thread_state -> __r13, thread_state -> __r14, thread_state -> __r15, thread_state -> __rip, thread_state -> __gs);
 }
 
-int get_symbol_offset(const char *dylib_path, const char *symbol_name) {
+long get_symbol_offset(const char *dylib_path, const char *symbol_name) {
     void *handle = dlopen(dylib_path, RTLD_LAZY);
     void *sym_loc = dlsym(handle, symbol_name);
     Dl_info info;
@@ -150,8 +150,25 @@ int get_symbol_offset(const char *dylib_path, const char *symbol_name) {
     return sym_loc - info.dli_fbase;
 }
 
+x86_thread_state64_t get_thread_state(task_t task) {
+    thread_act_port_array_t threadList;
+    mach_msg_type_number_t threadCount;
+    
+    MACH_CALL(task_threads(task, &threadList, &threadCount), TRUE);
+    
+    x86_thread_state64_t old_state;
+    mach_msg_type_number_t stateCount = x86_THREAD_STATE64_COUNT;
+    
+    MACH_CALL(thread_get_state(threadList[0], x86_THREAD_STATE64, (thread_state_t) &old_state, &stateCount), TRUE);
+    
+    return old_state;
+}
+
 int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol, unsigned long long arg1, unsigned long long arg2, unsigned long long arg3) {
     MACH_CALL(pause_threads(task), TRUE);
+    
+    x86_thread_state64_t old_state = get_thread_state(task);
+    printRegisterState(&old_state);
     
     int size = 0;
     struct dyld_image_info * dylibs = get_dylibs(task, &size);
@@ -162,13 +179,17 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     
     mach_vm_address_t dylib_address = find_dylib(dylibs, size, dylib);
     if (dylib_address == -1) {
-        printf("Getting libSystem_address failed\n");
+        printf("Getting address of dylib %s failed\n", dylib);
         return -1;
     }
     
-    int offset = get_symbol_offset(dylib, symbol);
+    free(dylibs);
+    
+    long offset = get_symbol_offset(dylib, symbol);
     mach_vm_address_t dylib_symbol_address = dylib_address + offset;
-        
+    
+    // printf("Dylib symbol address is %p\n", dylib_symbol_address);
+
     thread_act_t thread_port;
     // Create thread
     MACH_CALL(thread_create(task, &thread_port), TRUE);
@@ -177,25 +198,31 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     // Allocate stack
     MACH_CALL(vm_allocate(task, &stack_bottom, 2*1024*1024, TRUE), TRUE); // 2MB of stack
     vm_address_t stack_top = stack_bottom + 2*1024*1024; // stack starts at top
+    vm_address_t stack_middle = (stack_top - stack_bottom)/2 + stack_bottom; // fuck this shit just get it somewhere valid
     // copy stack_top and then decrement it when writing.
     
-    vm_address_t code_address;
-    // Last vm_allocate parameter is the flags, which only has one value, "anywhere". defined here: https://purplefish.apple.com/index.php?action=search_cached&path=osfmk%2Fvm%2Fvm_user.c&version=xnu-6153.2.3&project=xnu&q=mach_vm_allocate_external&language=all&index=Yukon#line176
-    MACH_CALL(vm_allocate(task, &code_address, 1024, TRUE), TRUE); // 1kb of code
-    char instructions[3] = { 0x41, 0xFF, 0xE7 }; // jmp r15; from https://defuse.ca/online-x86-assembler.htm
-    MACH_CALL(vm_write(task, code_address, (vm_offset_t) instructions, sizeof(instructions)), TRUE);
-
+    char *pattern = malloc(2*1024*1024);
+    memset(pattern, 2863311530 /* 0b1010101... == 0xaaaaaa */, 2*1024*1024);
+    MACH_CALL(vm_write(task, stack_bottom, (vm_offset_t) pattern, 2*1024*1024), TRUE);
+    
     x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
     
-    printRegisterState(thread_state);
+    // printRegisterState(thread_state);
     
     // General register setting
-    thread_state -> __rsp = stack_top;
-    thread_state -> __rbp = stack_top; // Pretty sure we start out with rsp == rbp
-    thread_state -> __rip = code_address;
-    thread_state -> __r15 = dylib_symbol_address; // Address of symbol in dylib in other task
-    thread_state -> __cs = dylib_symbol_address;
-            
+    thread_state -> __rsp = stack_middle; // If this isn't set correctly dlopen() will fail when trying to access it
+    thread_state -> __rbp = stack_middle; // Pretty sure we start out with rsp == rbp
+    
+    vm_address_t middler_stack = (stack_middle - stack_bottom)/2 + stack_bottom;
+    
+    thread_state -> __gs = middler_stack; // Used in part for thread-local storage... Do I have to do some kind of pthread initialization?
+    // There's gotta be logic like this in some pthread something,
+    // if issues keep coming up look there
+    thread_state -> __fs = old_state.__fs;
+    
+    // emulate the call portion
+    thread_state -> __rip = dylib_symbol_address;
+    
     // Emulate C calling convention
     thread_state -> __rdi = arg1;
     thread_state -> __rsi = arg2;
@@ -206,6 +233,7 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
         
     MACH_CALL(thread_set_state(thread_port, x86_THREAD_STATE64, (thread_state_t) thread_state, x86_THREAD_STATE64_COUNT), TRUE);
     
+    // thread_resume(thread_port);
     MACH_CALL(resume_threads(task), TRUE);
     return 0;
 }
@@ -229,9 +257,9 @@ int main(int argc, char **argv) {
     MACH_CALL(vm_allocate(task, &play_memory, 0x800, TRUE), TRUE); // 2KB of scratch space
     printf("Allocated 2KB of play memory at address %p\n", (void *)play_memory);
     
-    char *sentence = "One small step for mach and one s\n";
-    int sentence_len = strlen(sentence);
-    MACH_CALL(vm_write(task, play_memory, (vm_offset_t) sentence, sentence_len), TRUE);
+    char *sentence = "/Users/<name>/Library/Developer/Xcode/DerivedData/mods-cwcuoksgtqaajcajvipryepneztn/Build/Products/Debug/libinjector.dylib\0";
+    unsigned int s_len = (unsigned int) strlen(sentence);
+    MACH_CALL(vm_write(task, play_memory, (vm_offset_t) sentence, s_len), TRUE);
     
-    execute_symbol_with_args(task, "/usr/lib/system/libsystem_kernel.dylib", "write", 1, play_memory, sentence_len);
+    execute_symbol_with_args(task, "/usr/lib/system/libdyld.dylib", "dlopen", play_memory, RTLD_NOW, 0);
 }
