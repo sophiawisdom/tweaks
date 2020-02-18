@@ -12,7 +12,6 @@
 		0C2688E123CE94B40099E59D /* modify_ip.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2688E023CE94B40099E59D /* modify_ip.c */; };
 		0CAB366023F9EF640043C467 /* daemon.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.c */; };
 		0CAB367723F9F5B80043C467 /* libinjector.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB367523F9F5B80043C467 /* libinjector.c */; };
-		0CAB367F23FA48B60043C467 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB367E23FA48B60043C467 /* main.c */; };
 		0CEC28FB23D13B61000580B0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CEC28FA23D13B61000580B0 /* main.c */; };
 		0CEC290623D24266000580B0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CEC290523D24266000580B0 /* main.c */; };
 /* End PBXBuildFile section */
@@ -115,7 +114,6 @@
 		0CAB367023F9F5A00043C467 /* libinjector.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB367523F9F5B80043C467 /* libinjector.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = libinjector.c; sourceTree = "<group>"; };
 		0CAB367C23FA48B60043C467 /* FakeApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FakeApp; sourceTree = BUILT_PRODUCTS_DIR; };
-		0CAB367E23FA48B60043C467 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		0CEC28F823D13B61000580B0 /* big_malloc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = big_malloc; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CEC28FA23D13B61000580B0 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		0CEC290323D24266000580B0 /* port_leakage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = port_leakage; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -214,7 +212,6 @@
 				0CEC290423D24266000580B0 /* port_leakage */,
 				0CAB365923F9EF500043C467 /* daemon */,
 				0C0C7DDC23FBD0A100D4601A /* gs segment */,
-				0CAB367D23FA48B60043C467 /* FakeApp */,
 				0C2688BE23CE94560099E59D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -258,14 +255,6 @@
 				0CAB365F23F9EF640043C467 /* daemon.c */,
 			);
 			path = daemon;
-			sourceTree = "<group>";
-		};
-		0CAB367D23FA48B60043C467 /* FakeApp */ = {
-			isa = PBXGroup;
-			children = (
-				0CAB367E23FA48B60043C467 /* main.c */,
-			);
-			path = FakeApp;
 			sourceTree = "<group>";
 		};
 		0CEC28F923D13B61000580B0 /* big_malloc */ = {
@@ -594,7 +583,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CAB367F23FA48B60043C467 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

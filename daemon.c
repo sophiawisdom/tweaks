@@ -201,9 +201,9 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     vm_address_t stack_middle = (stack_top - stack_bottom)/2 + stack_bottom; // fuck this shit just get it somewhere valid
     // copy stack_top and then decrement it when writing.
     
-    char *pattern = malloc(2*1024*1024);
-    memset(pattern, 2863311530 /* 0b1010101... == 0xaaaaaa */, 2*1024*1024);
-    MACH_CALL(vm_write(task, stack_bottom, (vm_offset_t) pattern, 2*1024*1024), TRUE);
+    /*char *pattern = malloc(2*1024*1024);
+    memset(pattern, 2863311530, 2*1024*1024); // 2863311530 == 0b1010101... == 0xaaaaaa
+    MACH_CALL(vm_write(task, stack_bottom, (vm_offset_t) pattern, 2*1024*1024), TRUE);*/
     
     x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
     
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
     MACH_CALL(vm_allocate(task, &play_memory, 0x800, TRUE), TRUE); // 2KB of scratch space
     printf("Allocated 2KB of play memory at address %p\n", (void *)play_memory);
     
-    char *sentence = "/Users/<name>/Library/Developer/Xcode/DerivedData/mods-cwcuoksgtqaajcajvipryepneztn/Build/Products/Debug/libinjector.dylib\0";
+    char *sentence = "/Users/williamwisdom/Library/Developer/Xcode/DerivedData/mods-cwcuoksgtqaajcajvipryepneztn/Build/Products/Debug/libinjector.dylib\0";
     unsigned int s_len = (unsigned int) strlen(sentence);
     MACH_CALL(vm_write(task, play_memory, (vm_offset_t) sentence, s_len), TRUE);
     
