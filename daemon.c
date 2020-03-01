@@ -12,6 +12,7 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <sys/ptrace.h>
 
 #include <mach/vm_map.h>
 
@@ -19,6 +20,50 @@
 printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));\
 if (critical) {exit(1);}\
 }
+
+char injectedCode[] =
+// "\xCC"                            // int3
+
+"\x55"                            // push       rbp
+"\x48\x89\xE5"                    // mov        rbp, rsp
+"\x48\x83\xEC\x10"                // sub        rsp, 0x10
+"\x48\x8D\x7D\xF8"                // lea        rdi, qword [rbp+var_8]
+"\x31\xC0"                        // xor        eax, eax
+"\x89\xC1"                        // mov        ecx, eax
+"\x48\x8D\x15\x21\x00\x00\x00"    // lea        rdx, qword ptr [rip + 0x21]
+"\x48\x89\xCE"                    // mov        rsi, rcx
+"\x48\xB8"                        // movabs     rax, pthread_create_from_mach_thread
+"PTHRDCRT"
+"\xFF\xD0"                        // call       rax
+"\x89\x45\xF4"                    // mov        dword [rbp+var_C], eax
+"\x48\x83\xC4\x10"                // add        rsp, 0x10
+"\x5D"                            // pop        rbp
+"\x48\xc7\xc0\x13\x0d\x00\x00"    // mov        rax, 0xD13
+"\xEB\xFE"                        // jmp        0x0
+"\xC3"                            // ret
+
+"\x55"                            // push       rbp
+"\x48\x89\xE5"                    // mov        rbp, rsp
+"\x48\x83\xEC\x10"                // sub        rsp, 0x10
+"\xBE\x01\x00\x00\x00"            // mov        esi, 0x1
+"\x48\x89\x7D\xF8"                // mov        qword [rbp+var_8], rdi
+"\x48\x8D\x3D\x1D\x00\x00\x00"    // lea        rdi, qword ptr [rip + 0x2c]
+"\x48\xB8"                        // movabs     rax, dlopen
+"DLOPEN__"
+"\xFF\xD0"                        // call       rax
+"\x31\xF6"                        // xor        esi, esi
+"\x89\xF7"                        // mov        edi, esi
+"\x48\x89\x45\xF0"                // mov        qword [rbp+var_10], rax
+"\x48\x89\xF8"                    // mov        rax, rdi
+"\x48\x83\xC4\x10"                // add        rsp, 0x10
+"\x5D"                            // pop        rbp
+"\xC3"                            // ret
+
+"LIBLIBLIBLIB"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
 unsigned char * readProcessMemory (task_t task, mach_vm_address_t addr, mach_msg_type_number_t *size) {
     vm_offset_t readMem;
@@ -167,9 +212,6 @@ x86_thread_state64_t get_thread_state(task_t task) {
 int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol, unsigned long long arg1, unsigned long long arg2, unsigned long long arg3) {
     MACH_CALL(pause_threads(task), TRUE);
     
-    x86_thread_state64_t old_state = get_thread_state(task);
-    printRegisterState(&old_state);
-    
     int size = 0;
     struct dyld_image_info * dylibs = get_dylibs(task, &size);
     if (dylibs == NULL) {
@@ -188,11 +230,27 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     long offset = get_symbol_offset(dylib, symbol);
     mach_vm_address_t dylib_symbol_address = dylib_address + offset;
     
-    // printf("Dylib symbol address is %p\n", dylib_symbol_address);
-
+    
+    mach_vm_address_t code_memory;
+    MACH_CALL(mach_vm_allocate(task, &code_memory, 0x1000, TRUE), TRUE); // 1 page for instructions
+    char instructions[3] = { 0x41, 0xFF, 0xE6 }; // jmp r14. This is absolute.
+    // After creating new pthread, call sleep(). This symbol is, guaranteed to exist
+    // in the target process because libsystem_c.dylib has it.
+    MACH_CALL(mach_vm_write(task, code_memory, instructions, sizeof(instructions)), TRUE);
+    
+    // pthread_create
+    
+    mach_vm_protect(task, code_memory, 0x1000, true, VM_PROT_READ | VM_PROT_EXECUTE);
+    // Set maximum and set current, just as a guess
+    mach_vm_protect(task, code_memory, 0x1000, false, VM_PROT_READ | VM_PROT_EXECUTE);
+    
+    
     thread_act_t thread_port;
     // Create thread
     MACH_CALL(thread_create(task, &thread_port), TRUE);
+    
+    x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
+    memset(thread_state, 0, x86_THREAD_STATE64_COUNT); // I thought calloc handled this, but I suppose not?
     
     vm_address_t stack_bottom;
     // Allocate stack
@@ -201,32 +259,35 @@ int execute_symbol_with_args(task_t task, const char *dylib, const char *symbol,
     vm_address_t stack_middle = (stack_top - stack_bottom)/2 + stack_bottom; // fuck this shit just get it somewhere valid
     // copy stack_top and then decrement it when writing.
     
-    /*char *pattern = malloc(2*1024*1024);
-    memset(pattern, 2863311530, 2*1024*1024); // 2863311530 == 0b1010101... == 0xaaaaaa
-    MACH_CALL(vm_write(task, stack_bottom, (vm_offset_t) pattern, 2*1024*1024), TRUE);*/
-    
-    x86_thread_state64_t *thread_state = calloc(1, x86_THREAD_STATE64_COUNT);
-    
     // printRegisterState(thread_state);
     
     // General register setting
     thread_state -> __rsp = stack_middle; // If this isn't set correctly dlopen() will fail when trying to access it
     thread_state -> __rbp = stack_middle; // Pretty sure we start out with rsp == rbp
     
-    vm_address_t middler_stack = (stack_middle - stack_bottom)/2 + stack_bottom;
-    
-    thread_state -> __gs = middler_stack; // Used in part for thread-local storage... Do I have to do some kind of pthread initialization?
+    /*vm_address_t tls_bottom;
+    // Allocate stack
+    MACH_CALL(vm_allocate(task, &tls_bottom, 2*1024*1024, TRUE), TRUE); // 2MB of stack
+    vm_address_t tls_top = tls_bottom + 2*1024*1024; // stack starts at top
+    vm_address_t tls_middle = (tls_top - tls_bottom)/2 + tls_bottom; // fuck this
+        
+    printf("Setting __gs to %p\n", tls_middle & ~65535);
+    thread_state -> __gs = tls_middle & ~65535; // Used in part for thread-local storage... Do I have to do some kind of pthread initialization?
     // There's gotta be logic like this in some pthread something,
     // if issues keep coming up look there
-    thread_state -> __fs = old_state.__fs;
+    thread_state -> __fs = old_state.__fs;*/
     
     // emulate the call portion
-    thread_state -> __rip = dylib_symbol_address;
+    thread_state -> __rip = code_memory;
     
     // Emulate C calling convention
-    thread_state -> __rdi = arg1;
-    thread_state -> __rsi = arg2;
-    thread_state -> __rdx = arg3;
+    thread_state -> __rdi = arg1; // thread pointer
+    thread_state -> __rsi = 0; // attrs - null
+    thread_state -> __rdx = arg3; // function pointer
+    thread_state -> __rcx = 5; // arg
+    // rcx
+    
+    thread_state -> __r14 = dylib_symbol_address;
     // TODO: do more of the C calling convention.
     
     printRegisterState(thread_state);
@@ -248,18 +309,34 @@ int main(int argc, char **argv) {
         scanf("%d", &pid);
     }
     
-    printf("PID is: %d\n", pid);
+    printf("location is %s\n", argv[0]);
     
+    printf("PID is: %d. euid is %d\n", pid, geteuid());
+    
+    // Maybe possible to implement something like this on developer phones
+    // without development.
+    
+    // In general, we cannot have WX pages in sandboxed macOS processes, which
+    // ideally I want to be able to support as well.
+    // According to this article: https://saagarjha.com/blog/2020/02/23/jailed-just-in-time-compilation-on-ios/
+    // PT_ATTACHEXEC will allow me to have WX pages. This is very promising
+    // ptrace(PT_ATTACHEXC, pid, 0, 0);
+    // Doing this causes weird issues with processes being in this sort of zombie
+    // state and not terminating. This should be looked into. It's mentioned
+    // in the article.
+        
     mach_port_name_t task = MACH_PORT_NULL;
     MACH_CALL(task_for_pid(mach_task_self(), pid, &task), TRUE);
     
     vm_address_t play_memory;
-    MACH_CALL(vm_allocate(task, &play_memory, 0x800, TRUE), TRUE); // 2KB of scratch space
+    MACH_CALL(mach_vm_allocate(task, &play_memory, 0x800, TRUE), TRUE); // 2KB of scratch space
     printf("Allocated 2KB of play memory at address %p\n", (void *)play_memory);
     
-    char *sentence = "/Users/williamwisdom/Library/Developer/Xcode/DerivedData/mods-cwcuoksgtqaajcajvipryepneztn/Build/Products/Debug/libinjector.dylib\0";
+    // char *sentence = "/Users/williamwisdom/Library/Developer/Xcode/DerivedData/mods-cwcuoksgtqaajcajvipryepneztn/Build/Products/Debug/libinjector.dylib\0";
+    char *sentence = "Hello, world!\n";
     unsigned int s_len = (unsigned int) strlen(sentence);
-    MACH_CALL(vm_write(task, play_memory, (vm_offset_t) sentence, s_len), TRUE);
+    MACH_CALL(mach_vm_write(task, play_memory, (vm_offset_t) sentence, s_len), TRUE);
     
-    execute_symbol_with_args(task, "/usr/lib/system/libdyld.dylib", "dlopen", play_memory, RTLD_NOW, 0);
+    // execute_symbol_with_args(task, "/usr/lib/system/libdyld.dylib", "dlopen", play_memory, RTLD_NOW, 0);
+    execute_symbol_with_args(task, "/usr/lib/system/libsystem_kernel.dylib", "write", 1, play_memory, s_len);
 }

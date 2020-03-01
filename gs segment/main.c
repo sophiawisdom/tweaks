@@ -48,11 +48,21 @@ int main(int argc, const char * argv[]) {
     printRegisterState(&thread_state);
     
     thread_act_port_array_t threadList;
-    mach_msg_type_number_t threadCount;
+    mach_msg_type_number_t threadCount = x86_THREAD_STATE64_COUNT;
+    printf("made it here 1\n");
     
-    MACH_CALL(task_threads(task, &threadList, &threadCount), TRUE);
+    MACH_CALL(task_threads(mach_task_self(), &threadList, &threadCount), TRUE);
     
-    thread_state.__gs = 235235;
+    printf("made it here 2\n");
     
-    thread_set_state(<#thread_act_t target_act#>, <#thread_state_flavor_t flavor#>, <#thread_state_t new_state#>, <#mach_msg_type_number_t new_stateCnt#>)
+    thread_state.__gs = 0x10000;
+    thread_state.__rip = &&out;
+    
+    printf("made it here 3. __rip is %p\n", thread_state.__rip);
+    
+    thread_set_state(threadList[0], x86_THREAD_STATE64, (thread_state_t) &thread_state, x86_THREAD_STATE64_COUNT);
+    
+out: // This is so setting __rip doesn't crash shit lol
+    
+    printf("made it here 4\n");
 }
