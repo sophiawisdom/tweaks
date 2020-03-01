@@ -7,14 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C0C7DDE23FBD0A100D4601A /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C0C7DDD23FBD0A100D4601A /* main.c */; };
-		0C2688D023CE947F0099E59D /* zero_registers.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2688CF23CE947F0099E59D /* zero_registers.c */; };
-		0C2688E123CE94B40099E59D /* modify_ip.c in Sources */ = {isa = PBXBuildFile; fileRef = 0C2688E023CE94B40099E59D /* modify_ip.c */; };
 		0CAB366023F9EF640043C467 /* daemon.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.c */; };
-		0CAB367723F9F5B80043C467 /* libinjector.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB367523F9F5B80043C467 /* libinjector.c */; };
-		0CEC28FB23D13B61000580B0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CEC28FA23D13B61000580B0 /* main.c */; };
-		0CEC290623D24266000580B0 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CEC290523D24266000580B0 /* main.c */; };
-		6505B8512407540500C61927 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 6505B8502407540500C61927 /* main.c */; };
+		65F766B7240B638F00D94665 /* inject.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.c */; };
+		65F766C1240B67F100D94665 /* injected_library.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.c */; };
+		65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -121,26 +117,25 @@
 
 /* Begin PBXFileReference section */
 		0C0C7DDB23FBD0A100D4601A /* gs segment */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "gs segment"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0C0C7DDD23FBD0A100D4601A /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		0C2688BD23CE94560099E59D /* mods */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mods; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C2688CD23CE947F0099E59D /* zero_registers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = zero_registers; sourceTree = BUILT_PRODUCTS_DIR; };
-		0C2688CF23CE947F0099E59D /* zero_registers.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = zero_registers.c; sourceTree = "<group>"; };
 		0C2688D923CE94A90099E59D /* modify_ip */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = modify_ip; sourceTree = BUILT_PRODUCTS_DIR; };
-		0C2688E023CE94B40099E59D /* modify_ip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = modify_ip.c; sourceTree = "<group>"; };
 		0CAB365823F9EF500043C467 /* daemon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = daemon; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB365F23F9EF640043C467 /* daemon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = daemon.c; sourceTree = SOURCE_ROOT; };
 		0CAB366523F9F55F0043C467 /* loaded_dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = loaded_dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB367023F9F5A00043C467 /* libinjector.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		0CAB367523F9F5B80043C467 /* libinjector.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = libinjector.c; sourceTree = "<group>"; };
 		0CAB367C23FA48B60043C467 /* FakeApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FakeApp; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CEC28F823D13B61000580B0 /* big_malloc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = big_malloc; sourceTree = BUILT_PRODUCTS_DIR; };
-		0CEC28FA23D13B61000580B0 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		0CEC290323D24266000580B0 /* port_leakage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = port_leakage; sourceTree = BUILT_PRODUCTS_DIR; };
-		0CEC290523D24266000580B0 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		6505B843240753DE00C61927 /* pthread_testing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testing; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B84E2407540500C61927 /* pthread_testingy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testingy; sourceTree = BUILT_PRODUCTS_DIR; };
-		6505B8502407540500C61927 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		650C4826240264B8005401B9 /* daemon_info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = daemon_info.plist; sourceTree = SOURCE_ROOT; };
+		65F766B5240B638F00D94665 /* inject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inject.h; sourceTree = "<group>"; };
+		65F766B6240B638F00D94665 /* inject.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = inject.c; sourceTree = "<group>"; };
+		65F766BC240B67F100D94665 /* libinjected_library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjected_library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		65F766C0240B67F100D94665 /* injected_library.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = injected_library.c; sourceTree = "<group>"; };
+		65F766C5240B6C3900D94665 /* symbol_locator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symbol_locator.h; sourceTree = "<group>"; };
+		65F766C6240B6C3900D94665 /* symbol_locator.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = symbol_locator.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -228,28 +223,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65F766BA240B67F100D94665 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0C0C7DDC23FBD0A100D4601A /* gs segment */ = {
-			isa = PBXGroup;
-			children = (
-				0C0C7DDD23FBD0A100D4601A /* main.c */,
-			);
-			path = "gs segment";
-			sourceTree = "<group>";
-		};
 		0C2688B423CE94560099E59D = {
 			isa = PBXGroup;
 			children = (
-				0CAB367523F9F5B80043C467 /* libinjector.c */,
-				0C2688CE23CE947F0099E59D /* zero_registers */,
-				0C2688DA23CE94A90099E59D /* modify_ip */,
-				0CEC28F923D13B61000580B0 /* big_malloc */,
-				0CEC290423D24266000580B0 /* port_leakage */,
 				0CAB365923F9EF500043C467 /* daemon */,
-				0C0C7DDC23FBD0A100D4601A /* gs segment */,
-				6505B84F2407540500C61927 /* pthread_testingy */,
+				65F766BD240B67F100D94665 /* injected_library */,
 				0C2688BE23CE94560099E59D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -269,63 +257,43 @@
 				0C0C7DDB23FBD0A100D4601A /* gs segment */,
 				6505B843240753DE00C61927 /* pthread_testing */,
 				6505B84E2407540500C61927 /* pthread_testingy */,
+				65F766BC240B67F100D94665 /* libinjected_library.dylib */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		0C2688CE23CE947F0099E59D /* zero_registers */ = {
-			isa = PBXGroup;
-			children = (
-				0C2688CF23CE947F0099E59D /* zero_registers.c */,
-			);
-			path = zero_registers;
-			sourceTree = "<group>";
-		};
-		0C2688DA23CE94A90099E59D /* modify_ip */ = {
-			isa = PBXGroup;
-			children = (
-				0C2688E023CE94B40099E59D /* modify_ip.c */,
-			);
-			path = modify_ip;
 			sourceTree = "<group>";
 		};
 		0CAB365923F9EF500043C467 /* daemon */ = {
 			isa = PBXGroup;
 			children = (
 				0CAB365F23F9EF640043C467 /* daemon.c */,
+				65F766B5240B638F00D94665 /* inject.h */,
+				65F766B6240B638F00D94665 /* inject.c */,
+				65F766C5240B6C3900D94665 /* symbol_locator.h */,
+				65F766C6240B6C3900D94665 /* symbol_locator.c */,
 				650C4826240264B8005401B9 /* daemon_info.plist */,
 			);
 			path = daemon;
 			sourceTree = "<group>";
 		};
-		0CEC28F923D13B61000580B0 /* big_malloc */ = {
+		65F766BD240B67F100D94665 /* injected_library */ = {
 			isa = PBXGroup;
 			children = (
-				0CEC28FA23D13B61000580B0 /* main.c */,
+				65F766C0240B67F100D94665 /* injected_library.c */,
 			);
-			path = big_malloc;
-			sourceTree = "<group>";
-		};
-		0CEC290423D24266000580B0 /* port_leakage */ = {
-			isa = PBXGroup;
-			children = (
-				0CEC290523D24266000580B0 /* main.c */,
-			);
-			path = port_leakage;
-			sourceTree = "<group>";
-		};
-		6505B84F2407540500C61927 /* pthread_testingy */ = {
-			isa = PBXGroup;
-			children = (
-				6505B8502407540500C61927 /* main.c */,
-			);
-			path = pthread_testingy;
+			path = injected_library;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
 		0CAB366C23F9F5A00043C467 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		65F766B8240B67F100D94665 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -539,6 +507,23 @@
 			productReference = 6505B84E2407540500C61927 /* pthread_testingy */;
 			productType = "com.apple.product-type.tool";
 		};
+		65F766BB240B67F100D94665 /* injected_library */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 65F766C2240B67F100D94665 /* Build configuration list for PBXNativeTarget "injected_library" */;
+			buildPhases = (
+				65F766B8240B67F100D94665 /* Headers */,
+				65F766B9240B67F100D94665 /* Sources */,
+				65F766BA240B67F100D94665 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = injected_library;
+			productName = injected_library;
+			productReference = 65F766BC240B67F100D94665 /* libinjected_library.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -585,6 +570,9 @@
 					6505B84D2407540500C61927 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
+					65F766BB240B67F100D94665 = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
 				};
 			};
 			buildConfigurationList = 0C2688B823CE94560099E59D /* Build configuration list for PBXProject "mods" */;
@@ -612,6 +600,7 @@
 				0C0C7DDA23FBD0A100D4601A /* gs segment */,
 				6505B842240753DE00C61927 /* pthread_testing */,
 				6505B84D2407540500C61927 /* pthread_testingy */,
+				65F766BB240B67F100D94665 /* injected_library */,
 			);
 		};
 /* End PBXProject section */
@@ -621,7 +610,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C0C7DDE23FBD0A100D4601A /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -636,7 +624,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C2688D023CE947F0099E59D /* zero_registers.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -644,7 +631,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0C2688E123CE94B40099E59D /* modify_ip.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -652,7 +638,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65F766B7240B638F00D94665 /* inject.c in Sources */,
 				0CAB366023F9EF640043C467 /* daemon.c in Sources */,
+				65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -667,7 +655,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CAB367723F9F5B80043C467 /* libinjector.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -682,7 +669,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CEC28FB23D13B61000580B0 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -690,7 +676,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0CEC290623D24266000580B0 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -705,7 +690,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6505B8512407540500C61927 /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		65F766B9240B67F100D94665 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65F766C1240B67F100D94665 /* injected_library.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1057,6 +1049,30 @@
 			};
 			name = Release;
 		};
+		65F766C3240B67F100D94665 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		65F766C4240B67F100D94665 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1173,6 +1189,15 @@
 			buildConfigurations = (
 				6505B8532407540500C61927 /* Debug */,
 				6505B8542407540500C61927 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		65F766C2240B67F100D94665 /* Build configuration list for PBXNativeTarget "injected_library" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65F766C3240B67F100D94665 /* Debug */,
+				65F766C4240B67F100D94665 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

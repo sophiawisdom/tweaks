@@ -4,65 +4,73 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>FakeApp.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>7</integer>
-		</dict>
-		<key>big_malloc.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>3</integer>
-		</dict>
 		<key>daemon.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>gs segment.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>9</integer>
-		</dict>
-		<key>injector.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>8</integer>
-		</dict>
-		<key>loaded_dylib.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>5</integer>
-		</dict>
-		<key>modify_ip.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>4</integer>
-		</dict>
-		<key>mods.xcscheme_^#shared#^_</key>
+		<key>injected_library.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>port_leakage.xcscheme_^#shared#^_</key>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>0C0C7DDA23FBD0A100D4601A</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>6</integer>
+			<key>primary</key>
+			<true/>
 		</dict>
-		<key>pthread_testing.xcscheme_^#shared#^_</key>
+		<key>0C2688BC23CE94560099E59D</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>10</integer>
+			<key>primary</key>
+			<true/>
 		</dict>
-		<key>pthread_testingy.xcscheme_^#shared#^_</key>
+		<key>0C2688CC23CE947F0099E59D</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>11</integer>
+			<key>primary</key>
+			<true/>
 		</dict>
-		<key>zero_registers.xcscheme_^#shared#^_</key>
+		<key>0C2688D823CE94A90099E59D</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0CAB366423F9F55F0043C467</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0CAB366F23F9F5A00043C467</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0CAB367B23FA48B60043C467</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0CEC28F723D13B61000580B0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0CEC290223D24266000580B0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>6505B842240753DE00C61927</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>6505B84D2407540500C61927</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>
