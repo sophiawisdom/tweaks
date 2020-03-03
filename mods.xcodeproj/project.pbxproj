@@ -7,11 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0CAB366023F9EF640043C467 /* daemon.c in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.c */; };
+		0CAB366023F9EF640043C467 /* daemon.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.m */; };
+		65F1197D240CAD7700C8F55D /* InjectedXPCDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F1197B240CAD7700C8F55D /* InjectedXPCDelegate.h */; };
+		65F1197E240CAD7700C8F55D /* InjectedXPCDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F1197C240CAD7700C8F55D /* InjectedXPCDelegate.m */; };
+		65F11984240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */; };
+		65F11996240CDFC400C8F55D /* macho_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F11994240CDFC300C8F55D /* macho_parser.h */; };
+		65F11997240CDFC400C8F55D /* macho_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F11995240CDFC400C8F55D /* macho_parser.c */; };
+		65F1199B240CE92D00C8F55D /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
+		65F1199C240CE92D00C8F55D /* libmacho-parser.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		65F766B7240B638F00D94665 /* inject.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.c */; };
-		65F766C1240B67F100D94665 /* injected_library.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.c */; };
+		65F766C1240B67F100D94665 /* injected_library.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.m */; };
 		65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.c */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		65F1199D240CE92D00C8F55D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 65F1198A240CDEF500C8F55D;
+			remoteInfo = "macho-parser";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		0C0C7DD923FBD0A100D4601A /* CopyFiles */ = {
@@ -113,6 +130,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		65F1199F240CE92D00C8F55D /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				65F1199C240CE92D00C8F55D /* libmacho-parser.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -121,7 +149,7 @@
 		0C2688CD23CE947F0099E59D /* zero_registers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = zero_registers; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C2688D923CE94A90099E59D /* modify_ip */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = modify_ip; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB365823F9EF500043C467 /* daemon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = daemon; sourceTree = BUILT_PRODUCTS_DIR; };
-		0CAB365F23F9EF640043C467 /* daemon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = daemon.c; sourceTree = SOURCE_ROOT; };
+		0CAB365F23F9EF640043C467 /* daemon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = daemon.m; sourceTree = SOURCE_ROOT; };
 		0CAB366523F9F55F0043C467 /* loaded_dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = loaded_dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB367023F9F5A00043C467 /* libinjector.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CAB367C23FA48B60043C467 /* FakeApp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FakeApp; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -129,11 +157,19 @@
 		0CEC290323D24266000580B0 /* port_leakage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = port_leakage; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B843240753DE00C61927 /* pthread_testing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testing; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B84E2407540500C61927 /* pthread_testingy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testingy; sourceTree = BUILT_PRODUCTS_DIR; };
-		650C4826240264B8005401B9 /* daemon_info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = daemon_info.plist; sourceTree = SOURCE_ROOT; };
+		65F1197B240CAD7700C8F55D /* InjectedXPCDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InjectedXPCDelegate.h; sourceTree = "<group>"; };
+		65F1197C240CAD7700C8F55D /* InjectedXPCDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InjectedXPCDelegate.m; sourceTree = "<group>"; };
+		65F11982240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DaemonDistributedObjectsReceiver.h; sourceTree = "<group>"; };
+		65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DaemonDistributedObjectsReceiver.m; sourceTree = "<group>"; };
+		65F11985240CBC8000C8F55D /* daemon_info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = daemon_info.plist; sourceTree = "<group>"; };
+		65F11986240CD94C00C8F55D /* injected_library.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = injected_library.h; sourceTree = "<group>"; };
+		65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libmacho-parser.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
+		65F11994240CDFC300C8F55D /* macho_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macho_parser.h; sourceTree = "<group>"; };
+		65F11995240CDFC400C8F55D /* macho_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = macho_parser.c; sourceTree = "<group>"; };
 		65F766B5240B638F00D94665 /* inject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inject.h; sourceTree = "<group>"; };
 		65F766B6240B638F00D94665 /* inject.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = inject.c; sourceTree = "<group>"; };
 		65F766BC240B67F100D94665 /* libinjected_library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjected_library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		65F766C0240B67F100D94665 /* injected_library.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = injected_library.c; sourceTree = "<group>"; };
+		65F766C0240B67F100D94665 /* injected_library.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = injected_library.m; sourceTree = "<group>"; };
 		65F766C5240B6C3900D94665 /* symbol_locator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symbol_locator.h; sourceTree = "<group>"; };
 		65F766C6240B6C3900D94665 /* symbol_locator.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = symbol_locator.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -171,6 +207,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65F1199B240CE92D00C8F55D /* libmacho-parser.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,6 +260,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65F11989240CDEF500C8F55D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		65F766BA240B67F100D94665 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -238,7 +282,9 @@
 			children = (
 				0CAB365923F9EF500043C467 /* daemon */,
 				65F766BD240B67F100D94665 /* injected_library */,
+				65F1198C240CDEF500C8F55D /* macho-parser */,
 				0C2688BE23CE94560099E59D /* Products */,
+				65F1199A240CE92D00C8F55D /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -258,6 +304,7 @@
 				6505B843240753DE00C61927 /* pthread_testing */,
 				6505B84E2407540500C61927 /* pthread_testingy */,
 				65F766BC240B67F100D94665 /* libinjected_library.dylib */,
+				65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -265,20 +312,41 @@
 		0CAB365923F9EF500043C467 /* daemon */ = {
 			isa = PBXGroup;
 			children = (
-				0CAB365F23F9EF640043C467 /* daemon.c */,
+				0CAB365F23F9EF640043C467 /* daemon.m */,
 				65F766B5240B638F00D94665 /* inject.h */,
 				65F766B6240B638F00D94665 /* inject.c */,
 				65F766C5240B6C3900D94665 /* symbol_locator.h */,
 				65F766C6240B6C3900D94665 /* symbol_locator.c */,
-				650C4826240264B8005401B9 /* daemon_info.plist */,
+				65F11982240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.h */,
+				65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */,
+				65F11985240CBC8000C8F55D /* daemon_info.plist */,
 			);
 			path = daemon;
+			sourceTree = "<group>";
+		};
+		65F1198C240CDEF500C8F55D /* macho-parser */ = {
+			isa = PBXGroup;
+			children = (
+				65F11994240CDFC300C8F55D /* macho_parser.h */,
+				65F11995240CDFC400C8F55D /* macho_parser.c */,
+			);
+			path = "macho-parser";
+			sourceTree = "<group>";
+		};
+		65F1199A240CE92D00C8F55D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		65F766BD240B67F100D94665 /* injected_library */ = {
 			isa = PBXGroup;
 			children = (
-				65F766C0240B67F100D94665 /* injected_library.c */,
+				65F11986240CD94C00C8F55D /* injected_library.h */,
+				65F766C0240B67F100D94665 /* injected_library.m */,
+				65F1197B240CAD7700C8F55D /* InjectedXPCDelegate.h */,
+				65F1197C240CAD7700C8F55D /* InjectedXPCDelegate.m */,
 			);
 			path = injected_library;
 			sourceTree = "<group>";
@@ -293,10 +361,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65F11987240CDEF500C8F55D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65F11996240CDFC400C8F55D /* macho_parser.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		65F766B8240B67F100D94665 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65F1197D240CAD7700C8F55D /* InjectedXPCDelegate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,10 +455,12 @@
 				0CAB365423F9EF500043C467 /* Sources */,
 				0CAB365523F9EF500043C467 /* Frameworks */,
 				0CAB365623F9EF500043C467 /* CopyFiles */,
+				65F1199F240CE92D00C8F55D /* Embed Libraries */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				65F1199E240CE92D00C8F55D /* PBXTargetDependency */,
 			);
 			name = daemon;
 			productName = daemon;
@@ -507,6 +586,23 @@
 			productReference = 6505B84E2407540500C61927 /* pthread_testingy */;
 			productType = "com.apple.product-type.tool";
 		};
+		65F1198A240CDEF500C8F55D /* macho-parser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 65F11991240CDEF500C8F55D /* Build configuration list for PBXNativeTarget "macho-parser" */;
+			buildPhases = (
+				65F11987240CDEF500C8F55D /* Headers */,
+				65F11988240CDEF500C8F55D /* Sources */,
+				65F11989240CDEF500C8F55D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "macho-parser";
+			productName = "macho-parser";
+			productReference = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 		65F766BB240B67F100D94665 /* injected_library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 65F766C2240B67F100D94665 /* Build configuration list for PBXNativeTarget "injected_library" */;
@@ -532,7 +628,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1130;
 				LastUpgradeCheck = 1200;
-				ORGANIZATIONNAME = "William Wisdom";
+				ORGANIZATIONNAME = "Sophia Wisdom";
 				TargetAttributes = {
 					0C0C7DDA23FBD0A100D4601A = {
 						CreatedOnToolsVersion = 10.3;
@@ -570,6 +666,9 @@
 					6505B84D2407540500C61927 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
+					65F1198A240CDEF500C8F55D = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
 					65F766BB240B67F100D94665 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -601,6 +700,7 @@
 				6505B842240753DE00C61927 /* pthread_testing */,
 				6505B84D2407540500C61927 /* pthread_testingy */,
 				65F766BB240B67F100D94665 /* injected_library */,
+				65F1198A240CDEF500C8F55D /* macho-parser */,
 			);
 		};
 /* End PBXProject section */
@@ -639,8 +739,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				65F766B7240B638F00D94665 /* inject.c in Sources */,
-				0CAB366023F9EF640043C467 /* daemon.c in Sources */,
+				0CAB366023F9EF640043C467 /* daemon.m in Sources */,
 				65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */,
+				65F11984240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -693,15 +794,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65F11988240CDEF500C8F55D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65F11997240CDFC400C8F55D /* macho_parser.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		65F766B9240B67F100D94665 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65F766C1240B67F100D94665 /* injected_library.c in Sources */,
+				65F1197E240CAD7700C8F55D /* InjectedXPCDelegate.m in Sources */,
+				65F766C1240B67F100D94665 /* injected_library.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		65F1199E240CE92D00C8F55D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 65F1198A240CDEF500C8F55D /* macho-parser */;
+			targetProxy = 65F1199D240CE92D00C8F55D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0C0C7DDF23FBD0A100D4601A /* Debug */ = {
@@ -1049,6 +1167,30 @@
 			};
 			name = Release;
 		};
+		65F11992240CDEF500C8F55D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		65F11993240CDEF500C8F55D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		65F766C3240B67F100D94665 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1189,6 +1331,15 @@
 			buildConfigurations = (
 				6505B8532407540500C61927 /* Debug */,
 				6505B8542407540500C61927 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		65F11991240CDEF500C8F55D /* Build configuration list for PBXNativeTarget "macho-parser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				65F11992240CDEF500C8F55D /* Debug */,
+				65F11993240CDEF500C8F55D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
