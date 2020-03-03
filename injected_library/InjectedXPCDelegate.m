@@ -19,7 +19,7 @@
 }
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection {
-    printf("Got a request to connect to listener %@ from connection %@", listener ,newConnection);
+    NSLog(@"Got a request to connect to listener %@ from connection %@", listener, newConnection);
     return true;
 }
 @end

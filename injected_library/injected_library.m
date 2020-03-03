@@ -7,27 +7,33 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <os/log.h>
+#import "InjectedXPCDelegate.h"
 
 #include <time.h>
 
-void * data_loc = NULL;
-uint64_t diff_indicator = 0; // When this value changes, there is new data in data_loc.
-uint64_t update_received = 0; // When this value changes, the injected library has recognized the new value.
+void * endpoint_loc = NULL;
+uint64_t endpoint_len = 0;
 
 void async_main() {
     printf("Code run with dispatch_async\n");
     
-    while (1) {
-        if (update_received == diff_indicator || data_loc == NULL) {
-            struct timespec one_ms = {.tv_sec = 0, .tv_nsec=NSEC_PER_MSEC};
-            nanosleep(&one_ms, NULL); // Ideally not too high CPU usage.
-            continue;
-        }
-        
-        // new value
-        printf("New data value: \"%s\"\n", data_loc);
-        update_received = diff_indicator;
+    NSXPCListener *listener = [NSXPCListener anonymousListener];
+    InjectedXPCDelegate *delegate = [[InjectedXPCDelegate alloc] init];
+    listener.delegate = delegate;
+    NSXPCListenerEndpoint *endpoint = listener.endpoint;
+
+    NSError *error = nil;
+    NSData *data = [[[NSXPCCoder alloc] init] encodeXPCObject:endpoint forKey:@"endpoint"];
+    if (error) {
+        NSLog(@"Got error when archiving endpoint: %@", error);
     }
+    
+    endpoint_loc = (void *) [data bytes];
+    endpoint_len = [data length];
+    printf("Wrote data to endpoint_loc (%p) and endpoint_len (%llx)\n", endpoint_loc, endpoint_len);
+    
+    [listener resume];
 }
 
 __attribute__((constructor))

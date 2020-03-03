@@ -6,6 +6,7 @@
 
 #import <Foundation/Foundation.h>
 #import <os/log.h>
+#import "INJXPCListenerDelegate.h"
 
 #include "macho-parser/macho_parser.h"
 
@@ -16,15 +17,15 @@ exit(1);\
 
 int main(int argc, char **argv) {
     char *library = "/Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libinjected_library.dylib";
-    char *injectionSymbol = "_data_loc";
-    char *diffSymbol = "_diff_indicator";
+    char *data_loc_symbol = "_endpoint_loc";
+    char *data_len_symbol = "_endpoint_len";
     
-    mach_vm_offset_t injection_offset = getSymbolOffset(library, injectionSymbol); // We can't take the typical path of just
+    mach_vm_offset_t data_loc_offset = getSymbolOffset(library, data_loc_symbol); // We can't take the typical path of just
     // loading the dylib into memory and using dlsym() to get the offset because loading the dylib has side effects
     // for obvious reasons. Instead, we get the offset of the symbol from the dylib itself.
-    mach_vm_offset_t diff_indicator_offset = getSymbolOffset(library, diffSymbol);
-    if (!injection_offset || !diff_indicator_offset) {
-        fprintf(stderr, "Unable to get offset for symbol %s in dylib %s.\n", injectionSymbol, library);
+    mach_vm_offset_t data_len_offset = getSymbolOffset(library, data_len_symbol);
+    if (!data_loc_offset || !data_len_offset) {
+        fprintf(stderr, "Unable to get offset for symbol %s in dylib %s.\n", data_loc_symbol, library);
         return 1;
     }
     
@@ -50,34 +51,39 @@ int main(int argc, char **argv) {
     mach_vm_address_t stringAddress = 0;
     mach_vm_allocate(remoteTask, &stringAddress, 4096, true); // Let address be relocatable
     
-    char exampleString[] = "Hello, this is an example injection string! Pretty wicked, I would say!!\0";
-    mach_vm_write(remoteTask, stringAddress, (mach_vm_address_t) exampleString, sizeof(exampleString)); // Write string
-    printf("Wrote string to address %p\n", stringAddress);
-    
     mach_vm_address_t dylib_addr = get_dylib_address(remoteTask, library);
     if (dylib_addr == 0) {
         fprintf(stderr, "unable to find dylib addr\n");
     }
-    mach_vm_address_t injection_addr = dylib_addr + injection_offset;
-    mach_vm_address_t diff_indicator_addr = dylib_addr + diff_indicator_offset;
-    printf("injection_addr is %llx. dylib_addr is %llx. injection_offset is %llx\n", injection_addr, dylib_addr, injection_offset);
     
-    mach_vm_write(remoteTask, injection_addr, &stringAddress, 8); // This is writing the pointer
-    printf("Set injection addr (%llx) to string address %llx\n", injection_addr, stringAddress);
+    mach_vm_address_t data_loc_sym_addr = dylib_addr + data_loc_offset;
+    mach_vm_address_t data_len_sym_addr = dylib_addr + data_len_offset;
     
-    srandomdev();
-    int total_ms = 0;
-    for (int i = 0; i < 1000; i++) {
-        int ms_to_wait = (random() & 63) + 5;
-        struct timespec ten_ms = {.tv_sec = 0, .tv_nsec=NSEC_PER_MSEC*ms_to_wait};
-        nanosleep(&ten_ms, NULL);
-        total_ms += ms_to_wait;
-        
-        char *output = malloc(4096);
-        sprintf(output, "Have now waited a total of %d milliseconds", total_ms);
-        printf("Have now waited a total of %d milliseconds\n", total_ms); // Duplicating for newline
-        
-        MACH_CALL(mach_vm_write(remoteTask, stringAddress, output, 4096)); // write new string
-        MACH_CALL(mach_vm_write(remoteTask, diff_indicator_addr, &i, sizeof(i))); // Write new pointer
+    mach_vm_address_t data_loc_addr = 0;
+    mach_msg_type_number_t dataCnt;
+    
+    mach_vm_read(remoteTask, data_loc_sym_addr, sizeof(data_loc_addr), &data_loc_addr, &dataCnt);
+    while (data_loc_addr == 0) {
+        struct timespec rqtp = {.tv_nsec = NSEC_PER_MSEC, .tv_sec = 0};
+        nanosleep(&rqtp, NULL);
+
+        mach_vm_read(remoteTask, data_loc_sym_addr, sizeof(data_loc_addr), &data_loc_addr, &dataCnt);
+    }
+    
+    printf("Got data loc addr %llx\n", data_loc_addr);
+    
+    mach_vm_address_t data_len = 0;
+    mach_vm_read(remoteTask, data_len_sym_addr, sizeof(data_len), &data_len, &dataCnt);
+    
+    printf("Got data len %llx\n", data_len);
+    
+    void *endpoint_raw_data = malloc(data_len);
+    mach_vm_read(remoteTask, data_loc_addr, data_len, endpoint_raw_data, &dataCnt);
+    
+    NSData *endpoint_data = [[NSData alloc] initWithBytes:endpoint_raw_data length:data_len];
+    NSError *error = nil;
+    [NSKeyedUnarchiver unarchivedObjectOfClass:[NSXPCListenerEndpoint class] fromData:endpoint_data error:&error];
+    if (error) {
+        os_log_error(OS_LOG_DEFAULT, "Got error %@ when deserializing endpoint data", error);
     }
 }

@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0CAB366023F9EF640043C467 /* daemon.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.m */; };
+		658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */; };
 		65F1197D240CAD7700C8F55D /* InjectedXPCDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F1197B240CAD7700C8F55D /* InjectedXPCDelegate.h */; };
 		65F1197E240CAD7700C8F55D /* InjectedXPCDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F1197C240CAD7700C8F55D /* InjectedXPCDelegate.m */; };
-		65F11984240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */; };
 		65F11996240CDFC400C8F55D /* macho_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F11994240CDFC300C8F55D /* macho_parser.h */; };
 		65F11997240CDFC400C8F55D /* macho_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F11995240CDFC400C8F55D /* macho_parser.c */; };
 		65F1199B240CE92D00C8F55D /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
@@ -157,10 +157,10 @@
 		0CEC290323D24266000580B0 /* port_leakage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = port_leakage; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B843240753DE00C61927 /* pthread_testing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testing; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B84E2407540500C61927 /* pthread_testingy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testingy; sourceTree = BUILT_PRODUCTS_DIR; };
+		658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = INJXPCListenerDelegate.h; sourceTree = "<group>"; };
+		658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = INJXPCListenerDelegate.m; sourceTree = "<group>"; };
 		65F1197B240CAD7700C8F55D /* InjectedXPCDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InjectedXPCDelegate.h; sourceTree = "<group>"; };
 		65F1197C240CAD7700C8F55D /* InjectedXPCDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InjectedXPCDelegate.m; sourceTree = "<group>"; };
-		65F11982240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DaemonDistributedObjectsReceiver.h; sourceTree = "<group>"; };
-		65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DaemonDistributedObjectsReceiver.m; sourceTree = "<group>"; };
 		65F11985240CBC8000C8F55D /* daemon_info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = daemon_info.plist; sourceTree = "<group>"; };
 		65F11986240CD94C00C8F55D /* injected_library.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = injected_library.h; sourceTree = "<group>"; };
 		65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libmacho-parser.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -317,8 +317,8 @@
 				65F766B6240B638F00D94665 /* inject.c */,
 				65F766C5240B6C3900D94665 /* symbol_locator.h */,
 				65F766C6240B6C3900D94665 /* symbol_locator.c */,
-				65F11982240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.h */,
-				65F11983240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m */,
+				658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */,
+				658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */,
 				65F11985240CBC8000C8F55D /* daemon_info.plist */,
 			);
 			path = daemon;
@@ -738,10 +738,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */,
 				65F766B7240B638F00D94665 /* inject.c in Sources */,
 				0CAB366023F9EF640043C467 /* daemon.m in Sources */,
 				65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */,
-				65F11984240CB1FD00C8F55D /* DaemonDistributedObjectsReceiver.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

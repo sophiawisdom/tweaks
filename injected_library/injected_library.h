@@ -9,8 +9,7 @@
 #ifndef injected_library_h
 #define injected_library_h
 
-void * data_loc;
-uint64_t diff_indicator; // When this value changes, there is new data in data_loc.
-uint64_t update_received; // When this value changes, the injected library has recognized the new value.
+void * endpoint_loc;
+uint64_t endpoint_len;
 
 #endif /* injected_library_h */
