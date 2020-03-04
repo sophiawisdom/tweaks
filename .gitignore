@@ -2,7 +2,6 @@ __pycache__
 *.diff
 .DS_Store
 apps.yaml
-daemon
 xnu*
 libpthread*
 dyld*

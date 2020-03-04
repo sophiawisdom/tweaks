@@ -12,8 +12,9 @@
 
 #include <time.h>
 
-void * endpoint_loc = NULL;
-uint64_t endpoint_len = 0;
+void * data_loc = NULL;
+uint64_t data_len = 0;
+uint64_t indicator = 0;
 
 void async_main() {
     printf("Code run with dispatch_async\n");
@@ -27,6 +28,10 @@ void async_main() {
     NSData *data = [[[NSXPCCoder alloc] init] encodeXPCObject:endpoint forKey:@"endpoint"];
     if (error) {
         NSLog(@"Got error when archiving endpoint: %@", error);
+    }
+    
+    while (indicator == 0) {
+        
     }
     
     endpoint_loc = (void *) [data bytes];
