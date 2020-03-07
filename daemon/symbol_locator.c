@@ -73,6 +73,7 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     task_dyld_info_data_t task_dyld_info;
     mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
     
+    // Maybe also possible with task_get_dyld_image_infos?
     MACH_CALL(task_info(task, TASK_DYLD_INFO, (task_info_t)&task_dyld_info, &count), FALSE);
     // If you call task_info with the TASK_DYLD_INFO flavor, it'll give you information about dyld - specifically, where is the struct
     // that lists out the location of all the dylibs in the other process' memory. I think this can eventually be painfully discovered

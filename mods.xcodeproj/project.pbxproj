@@ -282,7 +282,7 @@
 			children = (
 				0CAB365923F9EF500043C467 /* daemon */,
 				65F766BD240B67F100D94665 /* injected_library */,
-				65F1198C240CDEF500C8F55D /* macho-parser */,
+				65F1198C240CDEF500C8F55D /* macho_parser */,
 				0C2688BE23CE94560099E59D /* Products */,
 				65F1199A240CE92D00C8F55D /* Frameworks */,
 			);
@@ -324,13 +324,13 @@
 			path = daemon;
 			sourceTree = "<group>";
 		};
-		65F1198C240CDEF500C8F55D /* macho-parser */ = {
+		65F1198C240CDEF500C8F55D /* macho_parser */ = {
 			isa = PBXGroup;
 			children = (
 				65F11994240CDFC300C8F55D /* macho_parser.h */,
 				65F11995240CDFC400C8F55D /* macho_parser.c */,
 			);
-			path = "macho-parser";
+			path = macho_parser;
 			sourceTree = "<group>";
 		};
 		65F1199A240CE92D00C8F55D /* Frameworks */ = {
@@ -892,6 +892,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = daemon_info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -944,6 +945,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = daemon_info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1006,7 +1008,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_HARDENED_RUNTIME = NO;
-				INFOPLIST_FILE = daemon_info.plist;
+				INFOPLIST_FILE = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1019,7 +1021,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_HARDENED_RUNTIME = NO;
-				INFOPLIST_FILE = daemon_info.plist;
+				INFOPLIST_FILE = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
