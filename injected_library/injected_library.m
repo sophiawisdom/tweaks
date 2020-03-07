@@ -16,16 +16,15 @@
 #include <time.h>
 
 // "mach_vm API routines operate on page-aligned addresses" - that 2006 book
+// This is used for bootstrapping shared memory. Correct value will be injected by the host process.
 __attribute__((aligned(4096)))
-struct injection_struct injection_in = {0}; // Host process to target
-__attribute__((aligned(4096)))
-struct injection_struct injection_out = {0}; // Target process to host (response)
+uint64_t shmem_loc = 0;
 
 const struct timespec one_msec = {.tv_sec = 0, .tv_nsec = NSEC_PER_MSEC};
 
 // Data in data_loc will be free()d after message has been received.
 
-struct injection_struct get_classes() {
+NSData * get_classes() {
     unsigned int numClasses = 0;
     Class * classes = objc_copyClassList(&numClasses);
     printf("Got %d classes\n", numClasses);
@@ -68,57 +67,64 @@ struct injection_struct get_classes() {
     if (err) {
         printf("Something went wrong\n");
         NSLog(@"Got error archiving class data: %@", err);
-        return (struct injection_struct) {0};
+        return nil;
     }
     
     // When will serialized_classes get freed? Not to worry now, but TODO: look for memory leaks. probably several.
     // does/can autoreleasing know about data in structs?
-                
-    return (struct injection_struct){.data_loc=[serialized_classes bytes], .data_len=[serialized_classes length], .data_indicator = 1};
+    
+    return serialized_classes;
+}
+
+NSData * dispatch_command(command_in *command) {
+    // The offset is rectified before it comes into us so we can use it as the loc.
+    command_type cmd = command -> cmd;
+    
+    NSData *dat = [NSData dataWithBytesNoCopy:command -> arg.shmem_offset length:command -> arg.len freeWhenDone:false];
+    
+    switch (cmd) {
+        case GET_CLASSES:
+            return get_classes();
+        default:
+            printf("Received command with unknown command_type: %d\n", cmd);
+            return nil;
+    }
 }
 
 void async_main() {
-    printf("Code run with dispatch_async\n");
+    // Wait for bootstrap
+    while (shmem_loc == 0) {
+        nanosleep(&one_msec, NULL);
+    }
     
-    printf("injection_out addr is %llx\n", &injection_out);
-    
+    unsigned long long *indicator = (unsigned long long *)shmem_loc;
+    command_in *command = (command_in *)(shmem_loc+8);
+    // Shitty event loop equivalent
     while (1) {
-        if (injection_in.data_indicator == 0) {
-            nanosleep(&one_msec, NULL);
-            continue;
-        }
-        
-        printf("Injection point is %p. data_loc is %p, data_len is 0x%x, data_indicator is %llu\n", &injection_in, injection_in.data_loc, injection_in.data_len, injection_in.data_indicator);
-        
-        NSData *data = [[NSData alloc] initWithBytes:injection_in.data_loc length:injection_in.data_len];
-        NSError *err = nil;
-        NSDictionary *result = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:data error:&err];
-        if (err) {
-            NSLog(@"Got error when unarchiving object received from injection: %@", err);
-            return;
-        }
-        
-        NSLog(@"Got result back - %@", result);
-        NSNumber *shmem_num = [result objectForKey:@"shmem_address"];
-        void *shmem_addr = (void *)[shmem_num longValue];
-        memset(shmem_addr, 0x69, 4096);
-        printf("Wrote a bunch of stuff to shmem_addr on our side, %llx\n", shmem_addr);
-        
-        memset(&injection_in, 0, sizeof(injection_in));
-        
-        if ([[result objectForKey:command_key] isEqualToString:get_classes_key]) {
-            struct injection_struct result = get_classes();
-            memcpy(&injection_out, &result, sizeof(injection_out));
-        } else {
-            printf("Unable to understand command\n");
-        }
-        
-        printf("injection_out is %llx, %llx, %llx. writing now.\n", injection_out.data_len, injection_out.data_loc, injection_out.data_indicator);
-        printf("Sent out data, waiting for response. data_indicator location is %p\n", &injection_out.data_indicator);
-        while (injection_out.data_indicator) {
+        data_out output = {0};
+        while (*indicator != NEW_IN_DATA) {
             nanosleep(&one_msec, NULL);
         }
-        printf("Out data received\n");
+        printf("Indicator is now %llx. command's offset from indicator is %llx\n", *indicator, (uint64_t)command - (uint64_t)indicator);
+        
+        // We have a message, now to interpret it.
+        printf("Got new command. cmd is %x\n", command -> cmd);
+        command -> arg.shmem_offset += shmem_loc; // Make suitable for processing
+        NSData *command_output = dispatch_command(command);
+        if (command_output == nil) {
+            goto end;
+        }
+        
+        // More efficient than memcpy(), though we incur syscall overhead. This could be >1MB though, so probably worthwhile.
+        // In the ideal case, the NSData was just allocated in our map in the first place but I don't know how to do that.
+        // TODO: check if command_output is bigger than shmem
+        mach_vm_copy(mach_task_self(), [command_output bytes], [command_output length], shmem_loc+4096 /* page boundary */);
+        output.shmem_offset = 4096;
+        output.len = [command_output length];
+
+end:
+        memcpy(shmem_loc+8, &output, sizeof(output));
+        *indicator = NEW_OUT_DATA; // indicate to host new data is ready
     }
 }
 
