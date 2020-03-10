@@ -134,6 +134,14 @@ char injectedCode[] =
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
 task_t inject(pid_t pid, const char *lib)
@@ -179,9 +187,7 @@ task_t inject(pid_t pid, const char *lib)
         fprintf(stderr, "Unable to allocate memory for remote stack in thread: Error %s\n", mach_error_string(kr));
         return (-2);
     }
-    else {
-        fprintf(stderr, "Allocated remote stack @0x%llx\n", remoteStack64);
-    }
+    
     /**
      * Then we allocate the memory for the thread
      */
@@ -215,19 +221,12 @@ task_t inject(pid_t pid, const char *lib)
         possiblePatchLocation++;
 
         if (memcmp(possiblePatchLocation, "PTHRDCRT", 8) == 0) {
-            printf("pthread_create_from_mach_thread @%llx\n", addrOfPthreadCreate);
             memcpy(possiblePatchLocation, &addrOfPthreadCreate, 8);
         }
 
         if (memcmp(possiblePatchLocation, "DLOPEN__", 6) == 0) {
-            printf("dlopen @%llx\n", addrOfDlopen);
             memcpy(possiblePatchLocation, &addrOfDlopen, sizeof(uint64_t));
         }
-        
-        /*if (memcmp(possiblePatchLocation, "DLOPEN__", 6) == 0) {
-            printf("printf @%llx\n", addrOfPrintf);
-            memcpy(possiblePatchLocation, &addrOfPrintf, sizeof(uint64_t));
-        }*/
 
         if (memcmp(possiblePatchLocation, "LIBLIBLIB", 9) == 0) {
             strcpy(possiblePatchLocation, lib);
@@ -280,8 +279,6 @@ task_t inject(pid_t pid, const char *lib)
     // set remote Stack Pointer
     remoteThreadState64.__rsp = (u_int64_t)remoteStack64;
     remoteThreadState64.__rbp = (u_int64_t)remoteStack64;
-
-    printf("Remote Stack 64  0x%llx, Remote code is %p\n", remoteStack64, p);
 
     /*
      * create thread and launch it in one go

@@ -6,75 +6,25 @@
 //  Copyright © 2020 Sophia Wisdom. All rights reserved.
 //
 
+#include <time.h>
 #import <Foundation/Foundation.h>
 #import <os/log.h>
-#import "InjectedXPCDelegate.h"
-
-#import "injected_library.h"
 #import <objc/runtime.h>
 
-#include <time.h>
+#import "injection_interface.h"
+#import "objc_runtime_getters.h"
+#import "logging.h"
 
 // "mach_vm API routines operate on page-aligned addresses" - that 2006 book
 // This is used for bootstrapping shared memory. Correct value will be injected by the host process.
 __attribute__((aligned(4096)))
 uint64_t shmem_loc = 0;
 
+os_log_t logger;
+
 const struct timespec one_msec = {.tv_sec = 0, .tv_nsec = NSEC_PER_MSEC};
 
 // Data in data_loc will be free()d after message has been received.
-
-NSData * get_classes() {
-    unsigned int numClasses = 0;
-    Class * classes = objc_copyClassList(&numClasses);
-    printf("Got %d classes\n", numClasses);
-    // This ends up requiring an individual mach_vm_read for every class. In the future (and/or now)
-    // it would be better to just get all the class names (and maybe methods?) and put them in a single
-    // contiguous block.
-    
-    // class_copyMethodList and class_getName and method_getDescription. Potentially also get ivars/properties/weak ivars/protocols.
-    
-    /*Class *contiguousClasses = (__bridge Class *) malloc(sizeof(Class) * count);
-    for (int i = 0; i < count; i++) {
-        memcpy(&contiguousClasses[i], &classes[i], sizeof(Class));
-        contiguousClasses[i];
-    }*/
-    
-    NSMutableArray<NSDictionary *> *class_data = [[NSMutableArray alloc] initWithCapacity:numClasses];
-    for (int i = 0; i < numClasses; i++) {
-        Class cls = classes[i];
-        
-        // Consider doing same with protocols/properties/ivars
-        unsigned int numMethods = 0;
-        Method * methods = class_copyMethodList(cls, &numMethods); // Does not look at superclasses
-        NSMutableArray<NSDictionary *> *methodList = [[NSMutableArray alloc] initWithCapacity:numMethods];
-        for (int j = 0; j < numMethods; j++) {
-            struct objc_method_description *desc = method_getDescription(methods[j ]);
-            if (desc -> name == NULL) {
-                printf("Got null selector... Not sure what this means. Class is %s\n", class_getName(cls));
-                continue;
-            }
-            [methodList setObject:@{@"name": [NSString stringWithUTF8String:desc -> name], @"types": [NSString stringWithUTF8String:desc -> types]} atIndexedSubscript:j];
-        }
-        
-        NSString *name = [NSString stringWithUTF8String:class_getName(cls)];
-        
-        [class_data setObject:@{@"methods": methodList, @"name":name} atIndexedSubscript:i];
-    }
-    
-    NSError *err = nil;
-    NSData *serialized_classes = [NSKeyedArchiver archivedDataWithRootObject:class_data requiringSecureCoding:false error:&err];
-    if (err) {
-        printf("Something went wrong\n");
-        NSLog(@"Got error archiving class data: %@", err);
-        return nil;
-    }
-    
-    // When will serialized_classes get freed? Not to worry now, but TODO: look for memory leaks. probably several.
-    // does/can autoreleasing know about data in structs?
-    
-    return serialized_classes;
-}
 
 NSData * dispatch_command(command_in *command) {
     // The offset is rectified before it comes into us so we can use it as the loc.
@@ -86,12 +36,16 @@ NSData * dispatch_command(command_in *command) {
         case GET_CLASSES:
             return get_classes();
         default:
-            printf("Received command with unknown command_type: %d\n", cmd);
+            os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;
     }
 }
 
 void async_main() {
+    logger = os_log_create("com.chrysler.porn", "injected");
+    
+    os_log(logger, "Initial log!");
+    
     // Wait for bootstrap
     while (shmem_loc == 0) {
         nanosleep(&one_msec, NULL);
@@ -105,10 +59,10 @@ void async_main() {
         while (*indicator != NEW_IN_DATA) {
             nanosleep(&one_msec, NULL);
         }
-        printf("Indicator is now %llx. command's offset from indicator is %llx\n", *indicator, (uint64_t)command - (uint64_t)indicator);
+        os_log(logger, "Indicator is now %llx. command's offset from indicator is %llx\n", *indicator, (uint64_t)command - (uint64_t)indicator);
         
         // We have a message, now to interpret it.
-        printf("Got new command. cmd is %x\n", command -> cmd);
+        os_log(logger, "Got new command. cmd is %x\n", command -> cmd);
         command -> arg.shmem_offset += shmem_loc; // Make suitable for processing
         NSData *command_output = dispatch_command(command);
         if (command_output == nil) {

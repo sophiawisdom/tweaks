@@ -66,10 +66,6 @@ mach_vm_address_t find_dylib(struct dyld_image_info * dyld_image_info, int size,
 }
 
 struct dyld_image_info * get_dylibs(task_t task, int *size) {
-    // By default, this environment variable will include "/usr/lib/system/introspection", which has an alternate version of libpthread_system.dylib.
-    // This causes dlopen() to load that libpthread when asked for libpthread, and therefore gives the wrong offsets and causes crashes.
-    // TODO: fix this -- there's some kind of Xcode setting for this.
-    
     task_dyld_info_data_t task_dyld_info;
     mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
     
