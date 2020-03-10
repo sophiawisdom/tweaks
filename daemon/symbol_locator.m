@@ -14,6 +14,8 @@
 #include <sys/syslimits.h>
 #include <stdlib.h>
 
+#import <Foundation/Foundation.h>
+
 #define MACH_CALL(kret, critical) if (kret != 0) {\
 printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));\
 if (critical) {exit(1);}\
@@ -46,17 +48,19 @@ long get_symbol_offset(const char *dylib_path, const char *symbol_name) {
     }
     dlclose(handle);
     
-    /*
-    printf("Offset for symbol \"%s\" is %lx. Alternate offset is %lx.\n", symbol_name, sym_loc - info.dli_fbase, info.dli_saddr - info.dli_fbase);
-    printf("Symbol is called \"%s\". Shared object is called \"%s\". Dylib path we asked for is \"%s\"\n", info.dli_sname, info.dli_fname, dylib_path);
-    printf("DYLD_LIBRARY_PATH is \"%s\"\n", getenv("DYLD_LIBRARY_PATH"));
-    printf("LD_LIBRARY_PATH is \"%s\"\n", getenv("LD_LIBRARY_PATH"));
-     */
-    
     return sym_loc - info.dli_fbase;
 }
 
+int hasDone = 0;
+
 mach_vm_address_t find_dylib(struct dyld_image_info * dyld_image_info, int size, const char *image_name) {
+    if (!hasDone) {
+        for (int i = 0; i < size; i++) {
+            printf("Loaded dylib #%d: %s\n", i, dyld_image_info[i].imageFilePath);
+        }
+        hasDone = 1;
+    }
+    
     for (int i = 0; i < size; i++) {
         if (strcmp(image_name, dyld_image_info[i].imageFilePath) == 0) {
             return (mach_vm_address_t) dyld_image_info[i].imageLoadAddress;
@@ -69,7 +73,6 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     task_dyld_info_data_t task_dyld_info;
     mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
     
-    // Maybe also possible with task_get_dyld_image_infos?
     MACH_CALL(task_info(task, TASK_DYLD_INFO, (task_info_t)&task_dyld_info, &count), FALSE);
     // If you call task_info with the TASK_DYLD_INFO flavor, it'll give you information about dyld - specifically, where is the struct
     // that lists out the location of all the dylibs in the other process' memory. I think this can eventually be painfully discovered
@@ -106,6 +109,23 @@ struct dyld_image_info * get_dylibs(task_t task, int *size) {
     *size = images_index;
     
     return images;
+}
+
+NSArray<NSString *> *getApplicationImages(task_t task) {
+    int size = 0;
+    struct dyld_image_info * dylibs = get_dylibs(task, &size);
+    NSMutableArray<NSString *> *applicationImages = [[NSMutableArray alloc] init];
+    for (int i = 0; i < size; i++) {
+        NSString *filepath = [NSString stringWithUTF8String:dylibs[i].imageFilePath];
+        NSString *testingFilepath = [filepath lowercaseString];
+        if ([testingFilepath hasPrefix:@"/usr/lib"] || // /usr/lib/libSystem.b.dylib for example
+            [testingFilepath hasPrefix:@"/system/library"] || // /system/library/frameworks + /system/library/privateframeworks
+            [testingFilepath hasSuffix:@"libinjected_library.dylib"]) {
+            continue;
+        }
+        [applicationImages addObject:filepath];
+    }
+    return applicationImages;
 }
 
 mach_vm_address_t get_dylib_address(task_t task, char *dylib) {

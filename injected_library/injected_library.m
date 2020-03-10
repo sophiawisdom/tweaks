@@ -30,11 +30,19 @@ NSData * dispatch_command(command_in *command) {
     // The offset is rectified before it comes into us so we can use it as the loc.
     command_type cmd = command -> cmd;
     
+    // It's ok to not copy this because data is only written to the mach_vm_map'd area once the function has completed.
+    // Even if the NSData was used directly it would be OK.
     NSData *dat = [NSData dataWithBytesNoCopy:command -> arg.shmem_offset length:command -> arg.len freeWhenDone:false];
     
     switch (cmd) {
-        case GET_CLASSES:
-            return get_classes();
+        case GET_IMAGES:
+            return get_images();
+        case GET_CLASSES_FOR_IMAGE:
+            return get_classes_for_image(dat);
+        case GET_METHODS_FOR_CLASS:
+            return get_methods_for_class(dat);
+        case GET_SUPERCLASS_FOR_CLASS:
+            return get_superclass_for_class(dat);
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;

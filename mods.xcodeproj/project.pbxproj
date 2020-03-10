@@ -16,9 +16,9 @@
 		65F11997240CDFC400C8F55D /* macho_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F11995240CDFC400C8F55D /* macho_parser.c */; };
 		65F1199B240CE92D00C8F55D /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
 		65F1199C240CE92D00C8F55D /* libmacho-parser.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		65F766B7240B638F00D94665 /* inject.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.c */; };
+		65F766B7240B638F00D94665 /* inject.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.m */; };
 		65F766C1240B67F100D94665 /* injected_library.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.m */; };
-		65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.c */; };
+		65F766C7240B6C3900D94665 /* symbol_locator.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -169,11 +169,11 @@
 		65F11994240CDFC300C8F55D /* macho_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macho_parser.h; sourceTree = "<group>"; };
 		65F11995240CDFC400C8F55D /* macho_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = macho_parser.c; sourceTree = "<group>"; };
 		65F766B5240B638F00D94665 /* inject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inject.h; sourceTree = "<group>"; };
-		65F766B6240B638F00D94665 /* inject.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = inject.c; sourceTree = "<group>"; };
+		65F766B6240B638F00D94665 /* inject.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; path = inject.m; sourceTree = "<group>"; };
 		65F766BC240B67F100D94665 /* libinjected_library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjected_library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		65F766C0240B67F100D94665 /* injected_library.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = injected_library.m; sourceTree = "<group>"; };
 		65F766C5240B6C3900D94665 /* symbol_locator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symbol_locator.h; sourceTree = "<group>"; };
-		65F766C6240B6C3900D94665 /* symbol_locator.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = symbol_locator.c; sourceTree = "<group>"; };
+		65F766C6240B6C3900D94665 /* symbol_locator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = symbol_locator.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -316,9 +316,9 @@
 			children = (
 				0CAB365F23F9EF640043C467 /* daemon.m */,
 				65F766B5240B638F00D94665 /* inject.h */,
-				65F766B6240B638F00D94665 /* inject.c */,
+				65F766B6240B638F00D94665 /* inject.m */,
 				65F766C5240B6C3900D94665 /* symbol_locator.h */,
-				65F766C6240B6C3900D94665 /* symbol_locator.c */,
+				65F766C6240B6C3900D94665 /* symbol_locator.m */,
 				658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */,
 				658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */,
 				65F11985240CBC8000C8F55D /* daemon_info.plist */,
@@ -743,9 +743,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */,
-				65F766B7240B638F00D94665 /* inject.c in Sources */,
+				65F766B7240B638F00D94665 /* inject.m in Sources */,
 				0CAB366023F9EF640043C467 /* daemon.m in Sources */,
-				65F766C7240B6C3900D94665 /* symbol_locator.c in Sources */,
+				65F766C7240B6C3900D94665 /* symbol_locator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

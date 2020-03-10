@@ -9,9 +9,13 @@
 #ifndef injected_library_h
 #define injected_library_h
 
+// Defined more in objc_runtime_getters.h
 typedef enum {
     NO_COMMAND,
-    GET_CLASSES // Gets classes and their methods, returned as a serialized NSArray<NSDictionary<NSString *, NSString *> *> *
+    GET_IMAGES,
+    GET_CLASSES_FOR_IMAGE,
+    GET_METHODS_FOR_CLASS,
+    GET_SUPERCLASS_FOR_CLASS
 } command_type;
 
 // Once this is set, target process will begin processing data
