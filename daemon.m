@@ -162,7 +162,10 @@ int main(int argc, char **argv) {
         }
     }
     
-    NSLog(@"Found application images: %@", getApplicationImages(remoteTask));
+    // This is a working heuristic for now but doesn't work necessarily. Some applications have libraries that are
+    // separate from the main binary but form most of the stuff that matters.
+    NSArray<NSString *> * applicationImages = getApplicationImages(remoteTask);
+    NSLog(@"Found application images: %@", applicationImages);
     
     // Typically takes <10ms to reach this point.
     
@@ -180,24 +183,131 @@ int main(int argc, char **argv) {
     
     fprintf(stderr, "Took %f to get to sending first command after target started waiting on semaphore\n", printTimeSince(injectionBegin));
     
-    NSData *resp = sendCommand(localShmemAddress, GET_IMAGES, nil, sem);
-    if (!resp) {
-        fprintf(stderr, "Encountered error while sending command, exiting\n");
-        return 1;
+    NSLog(@"Begin inputting commands. Options are:\nget_images (no args).\nget_classes_for_image (arg image name)\nget_methods_for_class (arg class name)\nget_superclass_for_class (arg class name)\n> ");
+    
+    char *input = NULL;
+    size_t line = 0;
+    getline(&input, &line, stdin); // initial get is for the newline when entering PID
+    // Input loop
+    while (1) {
+        getline(&input, &line, stdin);
+        NSError *err = nil;
+        
+        injectionBegin = [NSDate date];
+        
+        NSArray<NSString *>* initialWords = [[NSString stringWithUTF8String:input] componentsSeparatedByCharactersInSet :[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        NSMutableArray<NSString *> *words = [[NSMutableArray alloc] init];
+        for (NSString *str in initialWords) {
+            if ([str length] > 0) {
+                [words addObject:str];
+            }
+        }
+        NSLog(@"Words are %@", words);
+        NSString *mainInput = [words objectAtIndex:0];
+        if ([mainInput isEqualToString:@"get_images"]) {
+            NSData *resp = sendCommand(localShmemAddress, GET_IMAGES, nil, sem);
+            if (!resp) {
+                fprintf(stderr, "Encountered error while sending command, exiting\n");
+                return 1;
+            }
+            
+            fprintf(stderr, "Took %f to get back data from first command\n", printTimeSince(injectionBegin));
+            
+            NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
+            NSArray<NSString *> *images = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:resp error:&err];
+            if (err) {
+                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+                return 1;
+            }
+            NSLog(@"Got images back: %@", images);
+        } else if ([mainInput isEqualToString:@"get_executable_image"]) {
+            NSData *resp = sendCommand(localShmemAddress, GET_EXECUTABLE_IMAGE, nil, sem);
+            if (!resp) {
+                fprintf(stderr, "Encountered error while sending command, exiting\n");
+                return 1;
+            }
+                        
+            NSString *image = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
+            if (err) {
+                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+                return 1;
+            }
+            NSLog(@"executable image: %@", image);
+        } else if ([mainInput isEqualToString:@"get_classes_for_image"]) {
+            NSString *image = [[words subarrayWithRange:(NSRange){.location=1, .length=[words count]-1}] componentsJoinedByString:@" "]; // Can be multiple words
+            NSLog(@"Getting classes for image \"%@\"", image);
+            
+            NSError *err = nil;
+            NSData *serializedImage = [NSKeyedArchiver archivedDataWithRootObject:image requiringSecureCoding:false error:&err];
+            if (err) {
+                NSLog(@"Encountered error serializing image: %@", err);
+            }
+            
+            NSData *resp = sendCommand(localShmemAddress, GET_CLASSES_FOR_IMAGE, serializedImage, sem);
+            if (!resp) {
+                fprintf(stderr, "Encountered error while sending command, exiting\n");
+                return 1;
+            }
+                        
+            NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
+            NSArray<NSString *> *classes = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+            if (err) {
+                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+                return 1;
+            }
+            NSLog(@"got classes back: %@", classes);
+        } else if ([mainInput isEqualToString:@"get_methods_for_class"]) {
+            NSString *class = [words objectAtIndex:1];
+            NSLog(@"Getting methods for clas \"%@\"", class);
+            
+            NSError *err = nil;
+            NSData *serializedClass = [NSKeyedArchiver archivedDataWithRootObject:class requiringSecureCoding:false error:&err];
+            if (err) {
+                NSLog(@"Encountered error serializing image: %@", err);
+            }
+            
+            NSData *resp = sendCommand(localShmemAddress, GET_METHODS_FOR_CLASS, serializedClass, sem);
+            if (!resp) {
+                fprintf(stderr, "Encountered error while sending command, exiting\n");
+                return 1;
+            }
+                        
+            NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class]]];
+            NSArray<NSString *> *methods = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+            if (err) {
+                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+                return 1;
+            }
+            NSLog(@"got methods back: %@", methods);
+        } else if ([mainInput isEqualToString:@"get_superclass_for_class"]) {
+            NSString *class = [words objectAtIndex:1];
+            NSLog(@"Getting supperclasses for class %@", class);
+            
+            NSError *err = nil;
+            NSData *serializedClass = [NSKeyedArchiver archivedDataWithRootObject:class requiringSecureCoding:false error:&err];
+            if (err) {
+                NSLog(@"Encountered error serializing image: %@", err);
+            }
+            
+            NSData *resp = sendCommand(localShmemAddress, GET_SUPERCLASS_FOR_CLASS, serializedClass, sem);
+            if (!resp) {
+                fprintf(stderr, "Encountered error while sending command, exiting\n");
+                return 1;
+            }
+                        
+            NSString *superclass = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
+            if (err) {
+                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+                return 1;
+            }
+            NSLog(@"got superclass: %@", superclass);
+        } else {
+            printf("Unknown command\n");
+            continue;
+        }
+        
+        fprintf(stderr, "Took %f to get back data from first command\n", printTimeSince(injectionBegin));
     }
-    
-    fprintf(stderr, "Took %f to get back data from first command\n", printTimeSince(injectionBegin));
-    
-    NSError *err = nil;
-    NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
-    NSArray<NSString *> *images = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:resp error:&err];
-    fprintf(stderr, "Finished initial deserialization at %f\n", printTimeSince(injectionBegin));
-    if (err) {
-        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-        return 1;
-    }
-    
-    NSLog(@"Images are %@", images);
     
     // TODO: consider adding objc_addLoadImageFunc so we can see any new images loaded? Or otherwise adding hooks
     

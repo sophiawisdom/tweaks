@@ -36,4 +36,6 @@ NSData * get_methods_for_class(NSData *serializedClass);
 // Get superclass for class. Takes NSString * class name and returns NSString * superclass name.
 NSData * get_superclass_for_class(NSData *serializedClass);
 
+NSData * get_executable_image(void);
+
 #endif /* objc_runtime_getters_h */

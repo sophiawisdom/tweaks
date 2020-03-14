@@ -15,7 +15,8 @@ typedef enum {
     GET_IMAGES,
     GET_CLASSES_FOR_IMAGE,
     GET_METHODS_FOR_CLASS,
-    GET_SUPERCLASS_FOR_CLASS
+    GET_SUPERCLASS_FOR_CLASS,
+    GET_EXECUTABLE_IMAGE
 } command_type;
 
 // Once this is set, target process will begin processing data

@@ -48,6 +48,8 @@ NSData * dispatch_command(command_in *command) {
             return get_methods_for_class(dat);
         case GET_SUPERCLASS_FOR_CLASS:
             return get_superclass_for_class(dat);
+        case GET_EXECUTABLE_IMAGE:
+            return get_executable_image();
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;
