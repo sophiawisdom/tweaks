@@ -1,0 +1,3 @@
+[submodule "cricket"]
+	path = cricket
+	url = https://github.com/sophiawisdom/cricket-py3.git

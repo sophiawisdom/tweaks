@@ -85,6 +85,7 @@ NSData * get_superclass_for_class(NSData *serializedClass) {
     return archivedSuperclass;
 }
 
+// As of now, this only gets instance methods. TODO: handle class methods also with class_copyMethodList(object_getClass(cls), &count)
 NSData * get_methods_for_class(NSData *serializedClass) {
     NSError *err = nil;
     NSString *className = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:serializedClass error:&err];
