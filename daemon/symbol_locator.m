@@ -51,16 +51,7 @@ long get_symbol_offset(const char *dylib_path, const char *symbol_name) {
     return sym_loc - info.dli_fbase;
 }
 
-int hasDone = 0;
-
 mach_vm_address_t find_dylib(struct dyld_image_info * dyld_image_info, int size, const char *image_name) {
-    if (!hasDone) {
-        for (int i = 0; i < size; i++) {
-            printf("Loaded dylib #%d: %s\n", i, dyld_image_info[i].imageFilePath);
-        }
-        hasDone = 1;
-    }
-    
     for (int i = 0; i < size; i++) {
         if (strcmp(image_name, dyld_image_info[i].imageFilePath) == 0) {
             return (mach_vm_address_t) dyld_image_info[i].imageLoadAddress;

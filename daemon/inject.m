@@ -144,9 +144,8 @@ char injectedCode[] =
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
-task_t inject(pid_t pid, const char *lib)
+task_t inject(task_t remoteTask, const char *lib)
 {
-    task_t remoteTask;
     struct stat buf;
 
     /**
@@ -159,21 +158,6 @@ task_t inject(pid_t pid, const char *lib)
     }
 
     mach_error_t kr = 0;
-
-    /**
-    * Second - the critical part - we need task_for_pid in order to get the task port of the target
-    * pid. This is our do-or-die: If we get the port, we can do *ANYTHING* we want. If we don't, we're
-    * #$%#$%.
-    *
-    * In iOS, this will require the task_for_pid-allow entitlement. In OS X, this will require getting past
-    * taskgated, but root access suffices for that.
-    *
-    */
-    kr = task_for_pid(mach_task_self(), pid, &remoteTask);
-    if (kr != KERN_SUCCESS) {
-        fprintf(stderr, "Unable to call task_for_pid on pid %d: %s. Cannot continue!\n", pid, mach_error_string(kr));
-        return (-1);
-    }
 
     /**
      * From here on, it's pretty much straightforward -

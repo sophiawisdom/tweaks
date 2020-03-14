@@ -15,6 +15,11 @@
 #import "objc_runtime_getters.h"
 #import "logging.h"
 
+#define MACH_CALL(kret) if (kret != 0) {\
+    printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
+    exit(1);\
+}
+
 // "mach_vm API routines operate on page-aligned addresses" - that 2006 book
 // This is used for bootstrapping shared memory. Correct value will be injected by the host process.
 __attribute__((aligned(4096)))
@@ -52,22 +57,29 @@ NSData * dispatch_command(command_in *command) {
 void async_main() {
     logger = os_log_create("com.chrysler.porn", "injected");
     
-    os_log(logger, "Initial log!");
+    os_log(logger, "Initial log! Waiting for semaphore now");
     
-    // Wait for bootstrap
-    while (shmem_loc == 0) {
+    semaphore_t sem = SEM_PORT_NAME; // semaphores are just a port, which is created by the host and whose right is passed to the process on injection
+    // There's a risk that these ports could overlap, but hopefully not too awful.
+    while (shmem_loc == 0) { // wait until shmem is initialized. could do something fancy with semaphores, but this cost is paid once instead
+        // of on every command so not worth it.
         nanosleep(&one_msec, NULL);
     }
-    
-    unsigned long long *indicator = (unsigned long long *)shmem_loc;
-    command_in *command = (command_in *)(shmem_loc+8);
-    // Shitty event loop equivalent
+    *((unsigned long long *)shmem_loc) = 0;
+    command_in *command = (command_in *)(shmem_loc);
+    data_out output = {0};
+    // Event loop equivalent
     while (1) {
-        data_out output = {0};
-        while (*indicator != NEW_IN_DATA) {
-            nanosleep(&one_msec, NULL);
+        int kr = semaphore_wait(sem);
+        if (kr == KERN_TERMINATED) {
+            // Host process has exited
+            break;
+        } else if (kr != KERN_SUCCESS) {
+            MACH_CALL(kr);
         }
-        os_log(logger, "Indicator is now %llx. command's offset from indicator is %llx\n", *indicator, (uint64_t)command - (uint64_t)indicator);
+        struct timeval wakeup;
+        gettimeofday(&wakeup, NULL);
+        printf("Seconds is %ld and microseconds is %d\n", wakeup.tv_sec, wakeup.tv_usec);
         
         // We have a message, now to interpret it.
         os_log(logger, "Got new command. cmd is %x\n", command -> cmd);
@@ -80,14 +92,19 @@ void async_main() {
         // More efficient than memcpy(), though we incur syscall overhead. This could be >1MB though, so probably worthwhile.
         // In the ideal case, the NSData was just allocated in our map in the first place but I don't know how to do that.
         // TODO: check if command_output is bigger than shmem
-        mach_vm_copy(mach_task_self(), [command_output bytes], [command_output length], shmem_loc+4096 /* page boundary */);
+        mach_vm_copy(mach_task_self(), [command_output bytes], [command_output length], shmem_loc+4096);
         output.shmem_offset = 4096;
         output.len = [command_output length];
 
 end:
-        memcpy(shmem_loc+8, &output, sizeof(output));
-        *indicator = NEW_OUT_DATA; // indicate to host new data is ready
+        memcpy(shmem_loc, &output, sizeof(output));
+        memset(&output, 0, sizeof(output));
+        semaphore_signal(sem);
+        gettimeofday(&wakeup, NULL);
+        printf("Seconds is %ld and microseconds is %d for signalling semaphore again\n", wakeup.tv_sec, wakeup.tv_usec);
     }
+    
+    os_log(logger, "Exiting process control");
 }
 
 __attribute__((constructor))

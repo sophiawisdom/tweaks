@@ -12,7 +12,7 @@
 #include "injection_interface.h"
 
 #define MACH_CALL(kret) if (kret != 0) {\
-printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));\
+printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
 exit(1);\
 }
 
@@ -29,7 +29,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 
 // WARNING: data returned from this function will be overwritten when this is called again!
 // If you wish it to be preserved, copy the NSData.
-NSData *sendCommand(void *localShmemAddress, command_type cmd, NSData *arg) {
+NSData *sendCommand(uint64_t localShmemAddress, command_type cmd, NSData *arg, semaphore_t sem) {
     // Copy passed arg into the shared memory buffer so the foreign process can access it
     if ((MAP_SIZE - [arg length]) < 0x10000) {
         fprintf(stderr, "Passed command of size %lu, which is too large\n", [arg length]);
@@ -37,25 +37,33 @@ NSData *sendCommand(void *localShmemAddress, command_type cmd, NSData *arg) {
     }
     // We use this trick also on the output. Instead of a physical copy, just use VM tricks.
     // To be honest this is only more efficient on larger copies, but it's a fun trick IMO
-    mach_vm_copy(mach_task_self(), [arg bytes], [arg length], localShmemAddress+0x1000); // generous padding
+    MACH_CALL(mach_vm_copy(mach_task_self(), (mach_vm_address_t)[arg bytes], [arg length], localShmemAddress+0x1000)); // generous padding
     
-    unsigned long long *indicator = (unsigned long long *)localShmemAddress;
-    command_in *command = (command_in *)(localShmemAddress+8);
+    command_in *command = (command_in *)localShmemAddress;
     command -> cmd = cmd;
     command -> arg = (data_out){.shmem_offset=0x1000, .len=[arg length]};
-    *indicator = NEW_IN_DATA;
     
-    while (*indicator != NEW_OUT_DATA) {
-        nanosleep(&one_ms, NULL);
-    }
+    // Should be -1 here because injected_library should be waiting
+    struct timeval wakeup;
+    gettimeofday(&wakeup, NULL);
+    printf("signalling semaphore: Seconds is %ld and microseconds is %d\n", wakeup.tv_sec, wakeup.tv_usec);
+    // Latency from us calling semaphore_signal to the target process waking up is ~30µs, vs. ~1000µs with nanosleep() and checking memory value
+    MACH_CALL(semaphore_signal(sem));
         
-    data_out *response = (data_out *)(localShmemAddress+8);
+    // begin waiting for response. Consider adding timeout for error checking?
+    MACH_CALL(semaphore_wait(sem));
+    gettimeofday(&wakeup, NULL);
+    printf("Seconds is %ld and microseconds is %d for exiting semaphore_wait\n", wakeup.tv_sec, wakeup.tv_usec);
+    printf("Left semaphore_wait\n");
+        
+    data_out *response = (data_out *)localShmemAddress;
     if (response -> shmem_offset == 0 && response -> len == 0) {
-        printf("Got null response back, even though indicator is %llx\n", *indicator);
+        printf("Got null response back, even though sem has returned\n");
         return nil;
     }
+    printf("shmem_offset is %llx and len is %llx\n", response ->shmem_offset, response -> len);
     
-    void *response_loc = localShmemAddress + response -> shmem_offset;
+    void *response_loc = (void *) localShmemAddress + response -> shmem_offset;
     // This way we're zero-copy all the way from serialization in the other process.
     // TODO: consider just mmap'ing all the objective-c runtime data in the other process into this process?
     // If they use whole pointers and not offsets, it won't match up on this side though...
@@ -88,15 +96,27 @@ int main(int argc, char **argv) {
     NSDate *injectionBegin = [NSDate date];
     
     printf("Injecting into PID %d\n", pid);
-        
-    task_t remoteTask = inject(pid, library);
-    if (remoteTask < 0) { // Shitty way of checking for error condition.
+    
+    task_t remoteTask;
+    mach_error_t kr = task_for_pid(mach_task_self(), pid, &remoteTask);
+    if (kr != KERN_SUCCESS) {
+        fprintf(stderr, "Unable to call task_for_pid on pid %d: %s. Cannot continue!\n", pid, mach_error_string(kr));
+        return (-1);
+    }
+    
+    semaphore_t sem;
+    MACH_CALL(semaphore_create(mach_task_self(), &sem, SYNC_POLICY_FIFO, 0));
+    MACH_CALL(mach_port_insert_right(remoteTask,
+                           SEM_PORT_NAME, // Randomly generated port name. This will be how the target task can access the semaphore
+                                          // In theory this could collide with an existing one but in practice this is unlikely.
+                           sem, //
+                           MACH_MSG_TYPE_COPY_SEND)); // Semaphores give a send right (b/c receive in kernel)
+
+    kr = inject(remoteTask, library);
+    if (kr < 0) {
         fprintf(stderr, "Encountered error with injection: %d\n", remoteTask);
         return -1; // Error
     }
-            
-    mach_vm_address_t stringAddress = 0;
-    mach_vm_allocate(remoteTask, &stringAddress, 4096, true); // Let address be relocatable
     
     // Allocate remote memory. This will be the location of the mapping in the target process
     mach_vm_address_t remoteShmemAddress = 0;
@@ -142,21 +162,31 @@ int main(int argc, char **argv) {
         }
     }
     
-    NSLog(@"Found application images: %@", \
-          getApplicationImages(remoteTask));
+    NSLog(@"Found application images: %@", getApplicationImages(remoteTask));
     
     // Typically takes <10ms to reach this point.
-        
+    
+    memset(localShmemAddress, 0x22, 256); // So the target process can mark some of it as zero'd and we can tell the difference.
+    
     mach_vm_address_t shmem_sym_addr = dylib_addr + shmem_sym_offset;
-    MACH_CALL(mach_vm_write(remoteTask, shmem_sym_addr, &remoteShmemAddress, sizeof(remoteShmemAddress)));
+    MACH_CALL(mach_vm_write(remoteTask, shmem_sym_addr, (vm_offset_t)&remoteShmemAddress, sizeof(remoteShmemAddress)));
     
-    fprintf(stderr, "Took %f to get to sending first command and wait for completion\n", printTimeSince(injectionBegin));
+    fprintf(stderr, "Took %f to start waiting for target to wait on semaphore\n", printTimeSince(injectionBegin));
     
-    NSData *resp = sendCommand(localShmemAddress, GET_IMAGES, nil);
+    unsigned long long *indicator = (unsigned long long *)localShmemAddress;
+    while (*indicator != 0) { // This will be set to 0 once the target process has initialized. This means it is safe to use the semaphore.
+        nanosleep(&one_ms, NULL);
+    }
+    
+    fprintf(stderr, "Took %f to get to sending first command after target started waiting on semaphore\n", printTimeSince(injectionBegin));
+    
+    NSData *resp = sendCommand(localShmemAddress, GET_IMAGES, nil, sem);
     if (!resp) {
         fprintf(stderr, "Encountered error while sending command, exiting\n");
         return 1;
     }
+    
+    fprintf(stderr, "Took %f to get back data from first command\n", printTimeSince(injectionBegin));
     
     NSError *err = nil;
     NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [NSString class]]];

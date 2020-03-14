@@ -8,3 +8,4 @@ dyld*
 Libc*
 libdispatch*
 launchd*
+lldb*

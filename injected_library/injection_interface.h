@@ -23,6 +23,8 @@ typedef enum {
 // Once this is set, the target process' response has completed
 #define NEW_OUT_DATA 0x87654321
 
+#define SEM_PORT_NAME 0x83452 // Randomly generated port name. This will be how the target task can access the semaphore
+
 // First bytes of output shmem will be this.
 typedef struct data_out {
     uint64_t shmem_offset; // Offset from *shmem_loc
@@ -42,8 +44,5 @@ uint64_t shmem_loc; // Shared memory address in target process. The correct valu
 // First 8 bytes are for the data indicator
 // 0 until there is a new command, whereupon it is set to not-0.
 // When the command has been processed, set back to 0 again.
-
-NSString *command_key = @"command";
-NSString *get_classes_key = @"get_classes";
 
 #endif /* injected_library_h */
