@@ -10,21 +10,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
-// Dirty hack
-#ifndef injected_library_h
-
-typedef enum {
-    NO_COMMAND,
-    GET_IMAGES,
-    GET_CLASSES_FOR_IMAGE,
-    GET_METHODS_FOR_CLASS,
-    GET_SUPERCLASS_FOR_CLASS,
-    GET_EXECUTABLE_IMAGE
-} command_type;
-
-#endif
-
 @interface Process : NSObject
 
 - (instancetype)initWithPid:(pid_t)pid;
