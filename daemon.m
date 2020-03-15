@@ -45,7 +45,6 @@ int main(int argc, char **argv) {
     // Input loop
     while (1) {
         getline(&input, &line, stdin);
-        NSError *err = nil;
         
         injectionBegin = [NSDate date];
         
@@ -56,87 +55,21 @@ int main(int argc, char **argv) {
                 [words addObject:str];
             }
         }
-        NSLog(@"Words are %@", words);
+        
         NSString *mainInput = [words objectAtIndex:0];
         if ([mainInput isEqualToString:@"get_images"]) {
-            NSData *resp = [proc sendCommand:GET_IMAGES withArg:nil];
-            if (!resp) {
-                fprintf(stderr, "Encountered error while sending command, exiting\n");
-                return 1;
-            }
-            
-            fprintf(stderr, "Took %f to get back data from first command\n", printTimeSince(injectionBegin));
-            
-            NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
-            NSArray<NSString *> *images = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:resp error:&err];
-            if (err) {
-                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-                return 1;
-            }
-            NSLog(@"Got images back: %@", images);
+            NSLog(@"Images: %@", [proc getImages]);
         } else if ([mainInput isEqualToString:@"get_executable_image"]) {
-            NSData *resp = [proc sendCommand:GET_EXECUTABLE_IMAGE withArg:nil];
-            if (!resp) {
-                fprintf(stderr, "Encountered error while sending command, exiting\n");
-                return 1;
-            }
-                        
-            NSString *image = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
-            if (err) {
-                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-                return 1;
-            }
-            NSLog(@"executable image: %@", image);
+            NSLog(@"Images: %@", [proc getExecutableImage]);
         } else if ([mainInput isEqualToString:@"get_classes_for_image"]) {
             NSString *image = [[words subarrayWithRange:(NSRange){.location=1, .length=[words count]-1}] componentsJoinedByString:@" "]; // Can be multiple words
-            NSLog(@"Getting classes for image \"%@\"", image);
-            
-            NSData *resp = [proc sendCommand:GET_CLASSES_FOR_IMAGE withArg:image];
-            if (!resp) {
-                fprintf(stderr, "Encountered error while sending command, exiting\n");
-                return 1;
-            }
-                        
-            NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
-            NSArray<NSString *> *classes = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
-            if (err) {
-                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-                return 1;
-            }
-            NSLog(@"got classes back: %@", classes);
+            NSLog(@"Classes for image \"%@\": %@", image, [proc getClassesForImage:image]);
         } else if ([mainInput isEqualToString:@"get_methods_for_class"]) {
             NSString *class = [words objectAtIndex:1];
-            NSLog(@"Getting methods for clas \"%@\"", class);
-            
-            NSData *resp = [proc sendCommand:GET_METHODS_FOR_CLASS withArg:class];
-            if (!resp) {
-                fprintf(stderr, "Encountered error while sending command, exiting\n");
-                return 1;
-            }
-                        
-            NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class]]];
-            NSArray<NSString *> *methods = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
-            if (err) {
-                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-                return 1;
-            }
-            NSLog(@"got methods back: %@", methods);
+            NSLog(@"Methods for class \"%@\": %@", class, [proc getMethodsForClass:class]);
         } else if ([mainInput isEqualToString:@"get_superclass_for_class"]) {
             NSString *class = [words objectAtIndex:1];
-            NSLog(@"Getting supperclasses for class %@", class);
-            
-            NSData *resp = [proc sendCommand:GET_SUPERCLASS_FOR_CLASS withArg:class];
-            if (!resp) {
-                fprintf(stderr, "Encountered error while sending command, exiting\n");
-                return 1;
-            }
-                        
-            NSString *superclass = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
-            if (err) {
-                NSLog(@"Encountered error in deserializing response dictionary: %@", err);
-                return 1;
-            }
-            NSLog(@"got superclass: %@", superclass);
+            NSLog(@"Superclass for class \"%@\": %@", class, [proc getSuperclassForClass:class]);
         } else {
             printf("Unknown command\n");
             continue;

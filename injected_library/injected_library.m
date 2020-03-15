@@ -11,7 +11,7 @@
 #import <os/log.h>
 #import <objc/runtime.h>
 
-#import "injection_interface.h"
+#import "internal_injection_interface.h"
 #import "objc_runtime_getters.h"
 #import "logging.h"
 

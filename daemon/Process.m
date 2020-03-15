@@ -7,10 +7,11 @@
 //
 
 #import <sys/time.h>
+#include "internal_injection_interface.h"
 #import "Process.h"
+#include "macho_parser.h"
 #include "inject.h"
 #include "symbol_locator.h"
-#include "injection_interface.h"
 
 char *library = "/Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
@@ -149,7 +150,6 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     // We use this trick also on the output. Instead of a physical copy, just use VM tricks.
     // To be honest this is only more efficient on larger copies, but it's a fun trick IMO
-    printf("_localShmemAddress is %llx\n", _localShmemAddress);
     MACH_CALL(mach_vm_copy(mach_task_self(), (mach_vm_address_t)[serializedData bytes], [serializedData length], _localShmemAddress+0x1000)); // generous padding
     
     command_in *command = (command_in *)_localShmemAddress;
@@ -185,6 +185,88 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 
 - (void)sleepOneMs {
     nanosleep(&one_ms, NULL);
+}
+
+- (NSArray<NSString *> *)getImages {
+    NSData *resp = [self sendCommand:GET_IMAGES withArg:nil];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
+    NSArray<NSString *> *images = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return images;
+}
+
+- (NSString *)getExecutableImage {
+    NSData *resp = [self sendCommand:GET_EXECUTABLE_IMAGE withArg:nil];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSString *image = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    return image;
+}
+
+- (NSArray<NSString *> *)getClassesForImage:(NSString *)image {
+    NSData *resp = [self sendCommand:GET_CLASSES_FOR_IMAGE withArg:image];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
+    NSArray<NSString *> *classes = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return classes;
+}
+
+- (NSArray<NSString *> *)getMethodsForClass:(NSString *)className {
+    NSData *resp = [self sendCommand:GET_METHODS_FOR_CLASS withArg:className];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class]]];
+    NSArray<NSString *> *methods = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return methods;
+}
+
+- (NSString *)getSuperclassForClass:(NSString *)className {
+    NSData *resp = [self sendCommand:GET_SUPERCLASS_FOR_CLASS withArg:className];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSString *superclass = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return superclass;
 }
 
 @end

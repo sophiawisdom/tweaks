@@ -167,7 +167,7 @@
 		65C18783241791F000D42952 /* objc_runtime_getters.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = objc_runtime_getters.m; sourceTree = "<group>"; };
 		65C187862417928600D42952 /* logging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
 		65F11985240CBC8000C8F55D /* daemon_info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = daemon_info.plist; sourceTree = "<group>"; };
-		65F11986240CD94C00C8F55D /* injection_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = injection_interface.h; sourceTree = "<group>"; };
+		65F11986240CD94C00C8F55D /* internal_injection_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = internal_injection_interface.h; sourceTree = "<group>"; };
 		65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = "libmacho-parser.dylib"; sourceTree = BUILT_PRODUCTS_DIR; };
 		65F11994240CDFC300C8F55D /* macho_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macho_parser.h; sourceTree = "<group>"; };
 		65F11995240CDFC400C8F55D /* macho_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = macho_parser.c; sourceTree = "<group>"; };
@@ -350,7 +350,7 @@
 		65F766BD240B67F100D94665 /* injected_library */ = {
 			isa = PBXGroup;
 			children = (
-				65F11986240CD94C00C8F55D /* injection_interface.h */,
+				65F11986240CD94C00C8F55D /* internal_injection_interface.h */,
 				65F766C0240B67F100D94665 /* injected_library.m */,
 				65C187862417928600D42952 /* logging.h */,
 				65C18782241791F000D42952 /* objc_runtime_getters.h */,
