@@ -40,7 +40,7 @@ typedef struct command_in {
     data_out arg;
 } command_in;
 
-uint64_t shmem_loc; // Shared memory address in target process. The correct value of this will be injected by the host process.
+extern uint64_t shmem_loc; // Shared memory address in target process. The correct value of this will be injected by the host process.
 
 // First 8 bytes are for the data indicator
 // 0 until there is a new command, whereupon it is set to not-0.

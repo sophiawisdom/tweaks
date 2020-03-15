@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0CAB366023F9EF640043C467 /* daemon.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.m */; };
+		656AC2DA241DA48000B728A6 /* Process.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* Process.m */; };
 		658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */; };
 		65C18784241791F000D42952 /* objc_runtime_getters.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C18782241791F000D42952 /* objc_runtime_getters.h */; };
 		65C18785241791F000D42952 /* objc_runtime_getters.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C18783241791F000D42952 /* objc_runtime_getters.m */; };
@@ -158,6 +159,8 @@
 		0CEC290323D24266000580B0 /* port_leakage */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = port_leakage; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B843240753DE00C61927 /* pthread_testing */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testing; sourceTree = BUILT_PRODUCTS_DIR; };
 		6505B84E2407540500C61927 /* pthread_testingy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testingy; sourceTree = BUILT_PRODUCTS_DIR; };
+		656AC2D8241DA48000B728A6 /* Process.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Process.h; sourceTree = "<group>"; };
+		656AC2D9241DA48000B728A6 /* Process.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Process.m; sourceTree = "<group>"; };
 		658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = INJXPCListenerDelegate.h; sourceTree = "<group>"; };
 		658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = INJXPCListenerDelegate.m; sourceTree = "<group>"; };
 		65C18782241791F000D42952 /* objc_runtime_getters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = objc_runtime_getters.h; sourceTree = "<group>"; };
@@ -314,6 +317,8 @@
 		0CAB365923F9EF500043C467 /* daemon */ = {
 			isa = PBXGroup;
 			children = (
+				656AC2D8241DA48000B728A6 /* Process.h */,
+				656AC2D9241DA48000B728A6 /* Process.m */,
 				0CAB365F23F9EF640043C467 /* daemon.m */,
 				65F766B5240B638F00D94665 /* inject.h */,
 				65F766B6240B638F00D94665 /* inject.m */,
@@ -745,6 +750,7 @@
 				658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */,
 				65F766B7240B638F00D94665 /* inject.m in Sources */,
 				0CAB366023F9EF640043C467 /* daemon.m in Sources */,
+				656AC2DA241DA48000B728A6 /* Process.m in Sources */,
 				65F766C7240B6C3900D94665 /* symbol_locator.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
