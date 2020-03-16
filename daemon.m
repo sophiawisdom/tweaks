@@ -21,15 +21,12 @@ NSTimeInterval printTimeSince(NSDate *begin) {
 }
 
 int main(int argc, char **argv) {
-    
-    printf("Location is %s\n", argv[0]);
-    
     int pid = 0;
     if (argc > 1) {
         pid = atoi(argv[1]);
     }
-    if (pid == 0) {
-        printf("Input PID to pause: ");
+    while (pid == 0) {
+        printf("\nInput PID to pause: ");
         scanf("%d", &pid);
     }
     
@@ -43,9 +40,7 @@ int main(int argc, char **argv) {
         printf("Got back error for process\n");
         return 1;
     }
-    
-    fprintf(stderr, "Took %f to get to sending first command after target started waiting on semaphore\n", printTimeSince(injectionBegin));
-    
+        
     NSLog(@"Begin inputting commands. Options are:\nget_images (no args).\nget_classes_for_image (arg image name)\nget_methods_for_class (arg class name)\nget_superclass_for_class (arg class name)\nget_executable_image (no args)\nload_dylib (arg image name)\n> ");
     
     char *input = NULL;
@@ -65,6 +60,11 @@ int main(int argc, char **argv) {
             }
         }
         
+        if ([words count] == 0) {
+            fprintf(stderr, "Unknown command\n");
+            continue;
+        }
+        
         NSString *mainInput = [words objectAtIndex:0];
         if ([mainInput isEqualToString:@"get_images"]) {
             NSLog(@"Images: %@", [proc getImages]);
@@ -79,6 +79,28 @@ int main(int argc, char **argv) {
         } else if ([mainInput isEqualToString:@"get_superclass_for_class"]) {
             NSString *class = [words objectAtIndex:1];
             NSLog(@"Superclass for class \"%@\": %@", class, [proc getSuperclassForClass:class]);
+        } else if ([mainInput isEqualToString:@"get_properties_for_class"]) {
+            NSString *class = [words objectAtIndex:1];
+            NSLog(@"properties for class \"%@\": %@", class, [proc getPropertiesForClass:class]);
+        } else if ([mainInput isEqualToString:@"load_dylib"]) {
+            NSString *dylib = [[words subarrayWithRange:(NSRange){.location=1, .length=[words count]-1}] componentsJoinedByString:@" "]; // Can be multiple words
+            NSLog(@"Handle for dylib \"%@\" is %@", dylib, [proc load_dylib:dylib]);
+        } else if ([mainInput isEqualToString:@"switch"]) {
+            if ([words count] < 4) {
+                printf("need more words... only %ld", [words count]);
+                continue;
+            }
+            printf("count is %ld\n", [words count]);
+            NSString *oldClass = [words objectAtIndex:1];
+            NSString *newClass = [words objectAtIndex:2];
+            NSArray<NSString *> *selectors = [words subarrayWithRange:(NSRange){.location=3, .length=[words count]-3}];
+            NSLog(@"Replacing selectors on old class %@ with selectors on new class %@. selectors are %@", oldClass, newClass, selectors);
+            NSDictionary *switc = @{
+                @"oldClass": oldClass,
+                @"newClass": newClass,
+                @"selectors": selectors
+            };
+            NSLog(@"Got back result: %@", [proc replace_methods:@[switc]]);
         } else {
             printf("Unknown command\n");
             continue;

@@ -6,9 +6,6 @@
 //  Copyright © 2020 Sophia Wisdom. All rights reserved.
 //
 
-#ifndef objc_runtime_getters_h
-#define objc_runtime_getters_h
-
 #include <stdio.h>
 #import <Foundation/Foundation.h>
 
@@ -42,4 +39,4 @@ NSNumber *load_dylib(NSString *dylib);
 
 NSString *replace_methods(NSArray<NSDictionary<NSString *, id> *> *switches);
 
-#endif /* objc_runtime_getters_h */
+NSArray<NSDictionary *> * get_properties_for_class(NSString *className);

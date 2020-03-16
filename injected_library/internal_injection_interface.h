@@ -18,7 +18,8 @@ typedef enum {
     GET_SUPERCLASS_FOR_CLASS,
     GET_EXECUTABLE_IMAGE,
     LOAD_DYLIB,
-    REPLACE_METHODS
+    REPLACE_METHODS,
+    GET_PROPERTIES_FOR_CLASS
 } command_type;
 
 // Once this is set, target process will begin processing data

@@ -16,7 +16,7 @@
 #import "logging.h"
 
 #define MACH_CALL(kret) if (kret != 0) {\
-    printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
+    os_log(logger, "Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
     exit(1);\
 }
 
@@ -44,7 +44,7 @@ NSData * dispatch_command(command_in *command) {
         NSError *err = nil;
         input = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:dat error:&err];
         if (err) {
-            os_log_error(logger, "encountered error when deserializing data for command %{public}d", cmd);
+            os_log_error(logger, "encountered error when deserializing data for command %{public}d: %{public}@. data is %{public}@ input is %{public}@ ", cmd, err, dat, input);
             return nil;
         }
     }
@@ -72,6 +72,9 @@ NSData * dispatch_command(command_in *command) {
             break;
         case REPLACE_METHODS:
             retVal = replace_methods(input);
+            break;
+        case GET_PROPERTIES_FOR_CLASS:
+            retVal = get_properties_for_class(input);
             break;
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
@@ -115,9 +118,6 @@ void async_main() {
         } else if (kr != KERN_SUCCESS) {
             MACH_CALL(kr);
         }
-        struct timeval wakeup;
-        gettimeofday(&wakeup, NULL);
-        printf("Seconds is %ld and microseconds is %d\n", wakeup.tv_sec, wakeup.tv_usec);
         
         // We have a message, now to interpret it.
         os_log(logger, "Got new command. cmd is %x\n", command -> cmd);
@@ -138,8 +138,6 @@ end:
         memcpy(shmem_loc, &output, sizeof(output));
         memset(&output, 0, sizeof(output));
         semaphore_signal(sem);
-        gettimeofday(&wakeup, NULL);
-        printf("Seconds is %ld and microseconds is %d for signalling semaphore again\n", wakeup.tv_sec, wakeup.tv_usec);
     }
     
     os_log(logger, "Exiting process control");

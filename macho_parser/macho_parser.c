@@ -67,30 +67,14 @@ uint64_t getSymbolOffset(const char *dylib, char *symbol) {
     }
         
     struct mach_header_64 *header = (struct mach_header_64 *)map; // Add parsing for this later
-    
-//    printf("running\n");
-    
+        
     struct load_command *current_command = (uint64_t)header + sizeof(struct mach_header_64);
     for (int i = 0; i < header -> ncmds; i++) {
         int cmd = current_command -> cmd;
-        if (cmd == LC_SEGMENT_64) {
-            struct segment_command_64 *seg_command = current_command;
-            struct section_64 * section = ((uint64_t)seg_command + sizeof(struct segment_command_64));
-            for (int j = 0; j < seg_command -> nsects; j++) {
-//                printf("Found section %s,%s ", seg_command -> segname, section -> sectname);
-                if ((section -> flags & SECTION_TYPE) == S_LAZY_SYMBOL_POINTERS) {
-//                    printf("Offset is %x\n", section -> reserved1);
-                }
-//                printf("Section type: 0x%x. Section flags: 0x%x. Total flags 0x%x\n", section -> flags & SECTION_TYPE, section -> flags & SECTION_ATTRIBUTES, section -> flags);
-                section++;
-            }
-        } else if (cmd == LC_LOAD_DYLIB /* potentially add weak dylib etc. */) {
-        } else if (cmd == LC_ID_DYLIB) {
-        } else if (cmd == LC_SYMTAB) {
+        if (cmd == LC_SYMTAB) {
             struct symtab_command *symbols = current_command;
             char *string_list = (uint64_t)header + symbols -> stroff;
             struct nlist_64 *nlist = (uint64_t)header + symbols -> symoff; // Symbol offset is from the header...
-//            printf("Hit symtab\n");
             for (int j = 0; j < symbols -> nsyms; j++) {
                 char *sym = string_list + nlist -> n_un.n_strx;
                 if (strcmp(sym, symbol) == 0 && nlist -> n_value != 0) {
@@ -101,8 +85,6 @@ uint64_t getSymbolOffset(const char *dylib, char *symbol) {
                 }
                 nlist++; // maybe do something clever with initializing this with the for loop
             }
-        } else if (cmd == LC_DYSYMTAB) {
-            // printf("Encountered dsymtab\n");
         }
         
         current_command = (uint64_t)current_command + current_command -> cmdsize;

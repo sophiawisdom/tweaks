@@ -13,9 +13,10 @@
 #include "internal_injection_interface.h"
 #include "symbol_locator.h"
 
+
 #include <mach-o/dyld_images.h>
 
-//char *library = "/Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libinjected_library.dylib";
+// This is to get around sandboxing restrictions
 char *library = "/usr/lib/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
 
@@ -102,13 +103,6 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
                 VM_PROT_READ | VM_PROT_WRITE,
                 VM_INHERIT_SHARE));
     
-    int numDylibs = 0;
-    struct dyld_image_info * dylibs = get_dylibs(_remoteTask, &numDylibs);
-    printf("Got back %d dylibs\n", numDylibs);
-    for (int i = 0; i < numDylibs; i++) {
-        printf("dylib #%d is %s\n", i, dylibs[i].imageFilePath);
-    }
-    
     // Getting the dylib address requires the dylib to be loaded in the target process,
     // which can take some time. The constructor itself is close to as minimal as possible
     // where we still have a foothold in the other process, but just loading it itself takes
@@ -147,7 +141,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 // If you wish it to be preserved, copy the NSData.
 - (NSData *)sendCommand:(command_type)cmd withArg:(id)arg {
     NSError *err = nil;
-    NSData *serializedData = [NSKeyedArchiver archivedDataWithRootObject:arg requiringSecureCoding:false error:&err];
+    NSData *serializedData = [NSKeyedArchiver archivedDataWithRootObject:arg ?: @"" requiringSecureCoding:false error:&err];
     if (err) {
         NSLog(@"Encountered error while serializing data: %@", err);
         return nil;
@@ -293,6 +287,54 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     return superclass;
+}
+
+- (NSArray<NSDictionary *> *)getPropertiesForClass:(NSString *)className {
+    NSData *resp = [self sendCommand:GET_PROPERTIES_FOR_CLASS withArg:className];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class]]];
+    NSArray<NSDictionary *> *properties = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return properties;
+}
+
+- (NSNumber *)load_dylib:(NSString *)dylib {
+    NSData *resp = [self sendCommand:LOAD_DYLIB withArg:dylib];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSNumber *handle = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSNumber class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return handle;
+}
+- (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches {
+    NSData *resp = [self sendCommand:REPLACE_METHODS withArg:switches];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSString *handle = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return handle;
 }
 
 

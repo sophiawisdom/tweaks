@@ -16,9 +16,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<NSString *> *)getImages;
 - (NSString *)getExecutableImage;
-- (NSArray<NSString *> *)getClassesForImage:(NSString *)image;
-- (NSArray<NSString *> *)getMethodsForClass:(NSString *)className;
-- (NSString *)getSuperclassForClass:(NSString *)className;
+- (nullable NSArray<NSString *> *)getClassesForImage:(NSString *)image;
+- (nullable NSArray<NSString *> *)getMethodsForClass:(NSString *)className;
+- (nullable NSString *)getSuperclassForClass:(NSString *)className;
+- (nullable NSArray<NSDictionary *> *)getPropertiesForClass:(NSString *)className;
+- (NSNumber *)load_dylib:(NSString *)dylib;
+- (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches;
 
 @end
 

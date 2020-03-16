@@ -1,2 +1,4 @@
 #!/bin/bash
-mv ~/tweaks/libinjected_library.dylib /usr/lib/libinjected_library.dylib
+mkdir -p /usr/lib/injected
+mv ~/tweaks/libinjected_library.dylib /usr/lib/injected/libinjected_library.dylib
+mv /Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libtest_injectable.dylib /usr/lib/injected/libtest_injectable.dylib

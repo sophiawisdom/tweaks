@@ -58,11 +58,17 @@ NSString * get_superclass_for_class(NSString *className) {
 
 // As of now, this only gets instance methods. TODO: handle class methods also with class_copyMethodList(object_getClass(cls), &count)
 NSArray<NSDictionary *> * get_methods_for_class(NSString *className) {
-    os_log(logger, "Getting methods for class name \"%{public}@\" class %{public}@", className, NSClassFromString(className));
+    Class cls = NSClassFromString(className);
+    if (cls == nil) {
+        os_log_error(logger, "Unable to find class %{public}@ - got nil from NSClassFromString", className);
+        return nil;
+    }
+    
+    os_log(logger, "Getting methods for class name \"%{public}@\" class %{public}@", className, cls);
     
     // TODO: Implement getting methods of superclasses as well? For e.g. NSView or whatever.
     unsigned int numMethods = 0;
-    Method * methods = class_copyMethodList(NSClassFromString(className), &numMethods);
+    Method * methods = class_copyMethodList(cls, &numMethods);
     
     os_log(logger, "Getting methods for class \"%{public}@\". Got back that there were %{public}d", className, numMethods);
         
@@ -88,7 +94,48 @@ NSArray<NSDictionary *> * get_methods_for_class(NSString *className) {
     
     os_log(logger, "Return dict for class was %{public}@", selectors);
     
-    return selectors;
+    return [NSArray arrayWithArray:selectors];
+}
+
+NSArray<NSDictionary *> * get_properties_for_class(NSString *className) {
+    Class cls = NSClassFromString(className);
+    if (cls == nil) {
+        os_log_error(logger, "Unable to find class %{public}@ - got nil from NSClassFromString", className);
+        return nil;
+    }
+    
+    unsigned int numProperties = 0;
+    objc_property_t *props = class_copyPropertyList(cls, &numProperties);
+    NSMutableArray<NSDictionary *> *arr = [NSMutableArray arrayWithCapacity:numProperties];
+    for (int i = 0; i < numProperties; i++) {
+        const char *name = property_getName(props[i]);
+        if (!name) {
+            os_log_error(logger, "property #%{public}d is null on class %{public}@", i, className);
+            continue;
+        }
+        
+        unsigned int numAttrs = 0;
+        objc_property_attribute_t *attrs = property_copyAttributeList(props[i], &numAttrs);
+        NSMutableArray<NSArray<NSString *> *> *atts = [NSMutableArray arrayWithCapacity:numAttrs];
+        for (int j = 0; j < numAttrs; j++) {
+            if (!attrs[j].name) {
+                os_log_error(logger, "Attribute #%{public}d is null on property %{public}s", j, name);
+                continue;
+            }
+            
+            NSString *attrName = [NSString stringWithUTF8String:attrs[j].name];
+            
+            if (attrs[j].value) {
+                [atts setObject:@[attrName, [NSString stringWithUTF8String:attrs[j].value]] atIndexedSubscript:j];
+            } else {
+                [atts setObject:@[attrName] atIndexedSubscript:j];
+            }
+        }
+        
+        [arr setObject:@{@"name": [NSString stringWithUTF8String:name], @"attrs": atts} atIndexedSubscript:i];
+    }
+    
+    return arr;
 }
 
 NSString * get_executable_image() {
@@ -102,6 +149,7 @@ NSString * get_executable_image() {
 
 NSNumber *load_dylib(NSString *dylib) {
     void * handle = dlopen([dylib UTF8String], RTLD_NOW | RTLD_GLOBAL);
+    os_log(logger, "Got back handle %{public}p. dlerror() is %{public}s", handle, dlerror());
     return [NSNumber numberWithUnsignedLong:(unsigned long)handle];
 }
 
