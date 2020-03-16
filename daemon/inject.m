@@ -234,6 +234,7 @@ task_t inject(task_t remoteTask, const char *lib)
      * Mark code as executable - This also requires a workaround on iOS, btw.
      */
     kr = vm_protect(remoteTask, remoteCode64, sizeof(injectedCode), FALSE, VM_PROT_READ | VM_PROT_EXECUTE);
+    fprintf(stderr, "kr for vm_protect is %d\n", kr);
 
     /*
         * Mark stack as writable  - not really necessary
@@ -255,9 +256,6 @@ task_t inject(task_t remoteTask, const char *lib)
 
     remoteStack64 += (STACK_SIZE / 2); // this is the real stack
                                        //remoteStack64 -= 8;  // need alignment of 16
-
-    const char *p = (const char *)remoteCode64;
-
     remoteThreadState64.__rip = (u_int64_t)(vm_address_t)remoteCode64;
 
     // set remote Stack Pointer

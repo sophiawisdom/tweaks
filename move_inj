@@ -1,0 +1,2 @@
+#!/bin/bash
+mv ~/tweaks/libinjected_library.dylib /usr/lib/libinjected_library.dylib

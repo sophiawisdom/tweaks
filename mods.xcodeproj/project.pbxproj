@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		0CAB366023F9EF640043C467 /* daemon.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.m */; };
 		656AC2DA241DA48000B728A6 /* Process.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* Process.m */; };
-		658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */; };
 		65C18784241791F000D42952 /* objc_runtime_getters.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C18782241791F000D42952 /* objc_runtime_getters.h */; };
 		65C18785241791F000D42952 /* objc_runtime_getters.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C18783241791F000D42952 /* objc_runtime_getters.m */; };
 		65C187872417928600D42952 /* logging.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C187862417928600D42952 /* logging.h */; };
@@ -161,8 +160,6 @@
 		6505B84E2407540500C61927 /* pthread_testingy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pthread_testingy; sourceTree = BUILT_PRODUCTS_DIR; };
 		656AC2D8241DA48000B728A6 /* Process.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Process.h; sourceTree = "<group>"; };
 		656AC2D9241DA48000B728A6 /* Process.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Process.m; sourceTree = "<group>"; };
-		658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = INJXPCListenerDelegate.h; sourceTree = "<group>"; };
-		658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = INJXPCListenerDelegate.m; sourceTree = "<group>"; };
 		65C18782241791F000D42952 /* objc_runtime_getters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = objc_runtime_getters.h; sourceTree = "<group>"; };
 		65C18783241791F000D42952 /* objc_runtime_getters.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = objc_runtime_getters.m; sourceTree = "<group>"; };
 		65C187862417928600D42952 /* logging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
@@ -173,7 +170,7 @@
 		65F11995240CDFC400C8F55D /* macho_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = macho_parser.c; sourceTree = "<group>"; };
 		65F766B5240B638F00D94665 /* inject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inject.h; sourceTree = "<group>"; };
 		65F766B6240B638F00D94665 /* inject.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; path = inject.m; sourceTree = "<group>"; };
-		65F766BC240B67F100D94665 /* libinjected_library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjected_library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		65F766BC240B67F100D94665 /* ../../../../../../../../tweaks/libinjected_library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = ../../../../../../../../tweaks/libinjected_library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		65F766C0240B67F100D94665 /* injected_library.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = injected_library.m; sourceTree = "<group>"; };
 		65F766C5240B6C3900D94665 /* symbol_locator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symbol_locator.h; sourceTree = "<group>"; };
 		65F766C6240B6C3900D94665 /* symbol_locator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = symbol_locator.m; sourceTree = "<group>"; };
@@ -308,7 +305,7 @@
 				0C0C7DDB23FBD0A100D4601A /* gs segment */,
 				6505B843240753DE00C61927 /* pthread_testing */,
 				6505B84E2407540500C61927 /* pthread_testingy */,
-				65F766BC240B67F100D94665 /* libinjected_library.dylib */,
+				65F766BC240B67F100D94665 /* ../../../../../../../../tweaks/libinjected_library.dylib */,
 				65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */,
 			);
 			name = Products;
@@ -324,8 +321,6 @@
 				65F766B6240B638F00D94665 /* inject.m */,
 				65F766C5240B6C3900D94665 /* symbol_locator.h */,
 				65F766C6240B6C3900D94665 /* symbol_locator.m */,
-				658BB503240E485200ED20CA /* INJXPCListenerDelegate.h */,
-				658BB504240E485200ED20CA /* INJXPCListenerDelegate.m */,
 				65F11985240CBC8000C8F55D /* daemon_info.plist */,
 			);
 			path = daemon;
@@ -626,7 +621,7 @@
 			);
 			name = injected_library;
 			productName = injected_library;
-			productReference = 65F766BC240B67F100D94665 /* libinjected_library.dylib */;
+			productReference = 65F766BC240B67F100D94665 /* ../../../../../../../../tweaks/libinjected_library.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -747,7 +742,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				658BB505240E485200ED20CA /* INJXPCListenerDelegate.m in Sources */,
 				65F766B7240B638F00D94665 /* inject.m in Sources */,
 				0CAB366023F9EF640043C467 /* daemon.m in Sources */,
 				656AC2DA241DA48000B728A6 /* Process.m in Sources */,
@@ -1209,7 +1203,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_PREFIX = ../../../../../../../../tweaks/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1221,7 +1215,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
-				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_PREFIX = ../../../../../../../../tweaks/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};

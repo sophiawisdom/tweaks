@@ -7,13 +7,16 @@
 //
 
 #import <sys/time.h>
-#include "internal_injection_interface.h"
 #import "Process.h"
 #include "macho_parser.h"
 #include "inject.h"
+#include "internal_injection_interface.h"
 #include "symbol_locator.h"
 
-char *library = "/Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libinjected_library.dylib";
+#include <mach-o/dyld_images.h>
+
+//char *library = "/Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug/libinjected_library.dylib";
+char *library = "/usr/lib/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
 
 #define MACH_CALL(kret) if (kret != 0) {\
@@ -99,6 +102,13 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
                 VM_PROT_READ | VM_PROT_WRITE,
                 VM_INHERIT_SHARE));
     
+    int numDylibs = 0;
+    struct dyld_image_info * dylibs = get_dylibs(_remoteTask, &numDylibs);
+    printf("Got back %d dylibs\n", numDylibs);
+    for (int i = 0; i < numDylibs; i++) {
+        printf("dylib #%d is %s\n", i, dylibs[i].imageFilePath);
+    }
+    
     // Getting the dylib address requires the dylib to be loaded in the target process,
     // which can take some time. The constructor itself is close to as minimal as possible
     // where we still have a foothold in the other process, but just loading it itself takes
@@ -109,7 +119,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
         [self sleepOneMs];
         if (waits++ > 1500) {
             fprintf(stderr, "unable to find dylib addr after 1500ms, something is going wrong.\n");
-            break;
+            return nil;
         }
     }
     
@@ -268,5 +278,35 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     
     return superclass;
 }
+
+- (NSNumber *)getDylib:(NSString *)dylib {
+    NSData *resp = [self sendCommand:GET_SUPERCLASS_FOR_CLASS withArg:dylib];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSNumber *superclass = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSNumber class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return superclass;
+}
+
+
+// In dealloc() we need to communicate to the injected library to exit, and perhaps for it to
+/*
+- (void)dealloc
+{
+    
+    semaphore_destroy(mach_task_self_, _sem);
+    mach_vm_deallocate(_remoteTask, _remoteShmemAddress, MAP_SIZE);
+    
+}
+ */
+
+// TODO: Implement - (void)dealloc. Not super important right now but nice to clean up. Also helps with multiple processes.
 
 @end

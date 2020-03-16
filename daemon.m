@@ -11,6 +11,10 @@ printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, m
 exit(1);\
 }
 
+// TODO: mount -uw / + killall Finder every time the app launches so we can create "usr/lib/injection" and put all our stuff there
+// Be clear that the reason why is to get around potential sandboxing issues, especially prevalent with platform binaries.
+// Also add a mention in the README that SIP is required to be disabled.
+
 NSTimeInterval printTimeSince(NSDate *begin) {
     NSDate *injectionEnd = [NSDate date];
     return [injectionEnd timeIntervalSinceDate:begin];
@@ -35,9 +39,14 @@ int main(int argc, char **argv) {
     
     Process *proc = [[Process alloc] initWithPid:pid];
     
+    if (proc == nil) {
+        printf("Got back error for process\n");
+        return 1;
+    }
+    
     fprintf(stderr, "Took %f to get to sending first command after target started waiting on semaphore\n", printTimeSince(injectionBegin));
     
-    NSLog(@"Begin inputting commands. Options are:\nget_images (no args).\nget_classes_for_image (arg image name)\nget_methods_for_class (arg class name)\nget_superclass_for_class (arg class name)\n> ");
+    NSLog(@"Begin inputting commands. Options are:\nget_images (no args).\nget_classes_for_image (arg image name)\nget_methods_for_class (arg class name)\nget_superclass_for_class (arg class name)\nget_executable_image (no args)\nload_dylib (arg image name)\n> ");
     
     char *input = NULL;
     size_t line = 0;

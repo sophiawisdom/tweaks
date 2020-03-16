@@ -37,27 +37,63 @@ NSData * dispatch_command(command_in *command) {
     
     // It's ok to not copy this because data is only written to the mach_vm_map'd area once the function has completed.
     // Even if the NSData was used directly it would be OK.
-    NSData *dat = [NSData dataWithBytesNoCopy:command -> arg.shmem_offset length:command -> arg.len freeWhenDone:false];
+    id input = nil;
+    if (command -> arg.len > 0) {
+        NSData *dat = [NSData dataWithBytesNoCopy:command -> arg.shmem_offset length:command -> arg.len freeWhenDone:false];
+        NSSet<Class> *classes = [NSSet setWithArray:@[[NSString class], [NSArray class], [NSNumber class], [NSDictionary class]]];
+        NSError *err = nil;
+        input = [NSKeyedUnarchiver unarchivedObjectOfClasses:classes fromData:dat error:&err];
+        if (err) {
+            os_log_error(logger, "encountered error when deserializing data for command %{public}d", cmd);
+            return nil;
+        }
+    }
+    
+    id retVal = nil;
     
     switch (cmd) {
         case GET_IMAGES:
-            return get_images();
+            retVal = get_images();
+            break;
         case GET_CLASSES_FOR_IMAGE:
-            return get_classes_for_image(dat);
+            retVal = get_classes_for_image(input);
+            break;
         case GET_METHODS_FOR_CLASS:
-            return get_methods_for_class(dat);
+            retVal = get_methods_for_class(input);
+            break;
         case GET_SUPERCLASS_FOR_CLASS:
-            return get_superclass_for_class(dat);
+            retVal = get_superclass_for_class(input);
+            break;
         case GET_EXECUTABLE_IMAGE:
-            return get_executable_image();
+            retVal = get_executable_image();
+            break;
+        case LOAD_DYLIB:
+            retVal = load_dylib(input);
+            break;
+        case REPLACE_METHODS:
+            retVal = replace_methods(input);
+            break;
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;
     }
+    
+    if (retVal == nil) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSData *archivedData = [NSKeyedArchiver archivedDataWithRootObject:retVal requiringSecureCoding:false error:&err];
+    if (err) {
+        os_log_error(logger, "encountered error when deserializing data %{public}@ for command %{public}d", retVal, cmd);
+        return nil;
+    }
+    
+    return archivedData;
 }
 
 void async_main() {
-    logger = os_log_create("com.chrysler.porn", "injected");
+    // logger = os_log_create("com.chrysler.porn", "injected");
     
     os_log(logger, "Initial log! Waiting for semaphore now");
     
@@ -111,6 +147,10 @@ end:
 
 __attribute__((constructor))
 void bain() { // big guy, etc.
+    
+    logger = os_log_create("com.chrysler.porn", "injected");
+    os_log(logger, "-1'th log! Waiting for semaphore now");
+    
     // If we do something like sleep() during the constructor phase, the dylib is never considered loaded into the process.
     dispatch_queue_t new_queue = dispatch_queue_create("injected_queue", DISPATCH_QUEUE_SERIAL);
     dispatch_async(new_queue, ^{

@@ -11,6 +11,7 @@
 
 #include <mach-o/dyld.h>
 #import <objc/runtime.h>
+#import <dlfcn.h>
 
 // The reason why it's structured like this, with multiple levels to get down
 // to a particular selector, is because for applications that link a lot of frameworks
@@ -20,7 +21,7 @@
 // for each dylib than 1-2s times to get all the data, because in the former case there
 // won't be perceptible lag.
 
-NSData * get_images() {
+NSArray<NSString *> * get_images() {
     unsigned int numImages = 0;
     const char * _Nonnull * _Nonnull classes = objc_copyImageNames(&numImages);
     if (!classes) {
@@ -35,22 +36,10 @@ NSData * get_images() {
 
     free(classes);
     
-    NSError *err = nil;
-    NSData * archivedImages = [NSKeyedArchiver archivedDataWithRootObject:images requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving images: %@", err);
-        return nil;
-    }
-    return archivedImages;
+    return images;
 }
 
-NSData * get_classes_for_image(NSData *serializedImage) {
-    NSError *err = nil;
-    NSString *image = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:serializedImage error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when deserializing arg for get_classes_for_image: %@", err);
-    }
-    
+NSArray<NSString *> * get_classes_for_image(NSString *image) {
     unsigned int numClasses = 0;
     const char ** images = objc_copyClassNamesForImage([image UTF8String], &numClasses);
     os_log(logger, "Got %{public}d results back for copyClassNamesForImage on image \"%{public}s\"", numClasses, [image UTF8String]);
@@ -60,39 +49,15 @@ NSData * get_classes_for_image(NSData *serializedImage) {
         [classNames setObject:[NSString stringWithUTF8String:images[i]] atIndexedSubscript:i];
     }
     
-    NSData * archivedClasses = [NSKeyedArchiver archivedDataWithRootObject:classNames requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving classes: %@", err);
-        return nil;
-    }
-    return archivedClasses;
+    return classNames;
 }
 
-NSData * get_superclass_for_class(NSData *serializedClass) {
-    NSError *err = nil;
-    NSString *className = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:serializedClass error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when deserializing serializedClass for get_superclass_for_class: %@", err);
-    }
-
-    Class superClass = class_getSuperclass(NSClassFromString(className));
-
-    NSData * archivedSuperclass = [NSKeyedArchiver archivedDataWithRootObject:NSStringFromClass(superClass) requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving selectors for get_superclass_for_class: %@", err);
-        return nil;
-    }
-    return archivedSuperclass;
+NSString * get_superclass_for_class(NSString *className) {
+    return NSStringFromClass(class_getSuperclass(NSClassFromString(className)));
 }
 
 // As of now, this only gets instance methods. TODO: handle class methods also with class_copyMethodList(object_getClass(cls), &count)
-NSData * get_methods_for_class(NSData *serializedClass) {
-    NSError *err = nil;
-    NSString *className = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSString class] fromData:serializedClass error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when deserializing serializedClass for get_methods_for_class: %@", err);
-    }
-    
+NSArray<NSDictionary *> * get_methods_for_class(NSString *className) {
     os_log(logger, "Getting methods for class name \"%{public}@\" class %{public}@", className, NSClassFromString(className));
     
     // TODO: Implement getting methods of superclasses as well? For e.g. NSView or whatever.
@@ -123,53 +88,52 @@ NSData * get_methods_for_class(NSData *serializedClass) {
     
     os_log(logger, "Return dict for class was %{public}@", selectors);
     
-    NSData * archivedSelectors = [NSKeyedArchiver archivedDataWithRootObject:selectors requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving selectors for get_methods_for_class: %@", err);
-        return nil;
-    }
-    return archivedSelectors;
+    return selectors;
 }
 
-NSData * get_executable_image() {
+NSString * get_executable_image() {
     unsigned int bufsize = 1024;
     char *executablePath = malloc(bufsize);
     _NSGetExecutablePath(executablePath, &bufsize);
-    
-    NSError *err = nil;
-    NSData * archivedSuperclass = [NSKeyedArchiver archivedDataWithRootObject:[NSString stringWithUTF8String:executablePath] requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving selectors for get_superclass_for_class: %@", err);
-        return nil;
-    }
-    return archivedSuperclass;
+    NSString *strWithExecutablePath = [NSString stringWithUTF8String:executablePath];
+    free(executablePath);
+    return strWithExecutablePath;
+}
+
+NSNumber *load_dylib(NSString *dylib) {
+    void * handle = dlopen([dylib UTF8String], RTLD_NOW | RTLD_GLOBAL);
+    return [NSNumber numberWithUnsignedLong:(unsigned long)handle];
 }
 
 
+// Not going to handle deleting selectors... seems kinda silly. Only handle add and switch. For switch, new selector == old selector.
+void switching(NSDictionary<NSString *, id> *options) {
+    NSString *class = [options objectForKey:@"newClass"];
+    Class newCls = NSClassFromString(class);
+    
+    NSArray<NSString *> * selectors = [options objectForKey:@"selectors"];
+    
+    Class oldCls = NSClassFromString([options objectForKey:@"oldClass"]);
+        
+    for (NSString *selector in selectors) {
+        const char *selbytes = [selector UTF8String];
+        SEL selector = sel_registerName(selbytes); // Get canonical pointer value
+        Method newMeth = class_getInstanceMethod(newCls, selector); // necessary to get types
+        IMP newImp = method_getImplementation(newMeth);
+        if (!newImp) {
+            os_log_error(logger, "No new implementation for sel %{public}s on class %{public}@", selbytes, class);
+            continue;
+        }
+        
+        class_replaceMethod(oldCls, selector, newImp, method_getTypeEncoding(newMeth));
+    }
+}
 
-/*
-NSData * get_weird_classes() {
-    NSError *err = nil;
-    
-    unsigned int num_classes;
-    Class *classList = objc_copyClassList(&num_classes);
-    os_log(logger, "Got %d classes\n", num_classes);
-    
-    unsigned int bufsize = 1024;
-    char *executablePath = malloc(bufsize);
-    _NSGetExecutablePath(executablePath, &bufsize);
-    unsigned int outCount = 0;
-    const char **rawClassNames = objc_copyClassNamesForImage(executablePath, &outCount);
-    
-    NSMutableArray<NSString *> *classNames = [NSMutableArray arrayWithCapacity:outCount];
-    for (int i = 0; i < outCount; i++) {
-        [classNames setObject:[NSString stringWithUTF8String:rawClassNames[i]] atIndexedSubscript:i];
+// Takes NSArray<NSDictionary<NSString *, id> *>
+NSString *replace_methods(NSArray<NSDictionary<NSString *, id> *> *switches) {
+    for (NSDictionary *params in switches) {
+        switching(params);
     }
     
-    NSData * archivedClasses = [NSKeyedArchiver archivedDataWithRootObject:classNames requiringSecureCoding:false error:&err];
-    if (err) {
-        os_log_error(logger, "encountered error when archiving classes for get_weird_classes: %@", err);
-        return nil;
-    }
-    return archivedClasses;
-}*/
+    return @"successful";
+}
