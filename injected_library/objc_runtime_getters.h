@@ -40,3 +40,7 @@ NSNumber *load_dylib(NSString *dylib);
 NSString *replace_methods(NSArray<NSDictionary<NSString *, id> *> *switches);
 
 NSArray<NSDictionary *> * get_properties_for_class(NSString *className);
+
+NSString *print_windows(void);
+
+NSArray<NSArray<id> *> *getIvars(NSString *class);

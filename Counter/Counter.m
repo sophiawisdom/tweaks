@@ -1,14 +1,14 @@
 //
 //  counter.m
-//  testing_target
+//  Counter
 //
 //  Created by Sophia Wisdom on 3/16/20.
 //  Copyright © 2020 Sophia Wisdom. All rights reserved.
 //
 
-#import "tobeinjected.h"
+#import "Counter.h"
 
-@implementation counter {
+@implementation Counter {
     int _counter;
 }
 

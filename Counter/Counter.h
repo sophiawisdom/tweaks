@@ -1,6 +1,6 @@
 //
 //  counter.h
-//  testing_target
+//  Counter
 //
 //  Created by Sophia Wisdom on 3/16/20.
 //  Copyright © 2020 Sophia Wisdom. All rights reserved.
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface counter : NSObject
+@interface Counter : NSObject
 
 - (instancetype)init;
 

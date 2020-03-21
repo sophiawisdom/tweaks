@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSArray<NSDictionary *> *)getPropertiesForClass:(NSString *)className;
 - (NSNumber *)load_dylib:(NSString *)dylib;
 - (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches;
+- (NSString *)get_windows;
+- (NSArray<NSArray *> *)get_ivars:(NSString *)cls;
 
 @end
 

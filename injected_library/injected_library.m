@@ -51,6 +51,8 @@ NSData * dispatch_command(command_in *command) {
     
     id retVal = nil;
     
+    os_log(logger, "on the new stuff");
+    
     switch (cmd) {
         case GET_IMAGES:
             retVal = get_images();
@@ -76,6 +78,12 @@ NSData * dispatch_command(command_in *command) {
         case GET_PROPERTIES_FOR_CLASS:
             retVal = get_properties_for_class(input);
             break;
+        case GET_WINDOWS:
+            retVal = print_windows();
+            break;
+        case GET_IVARS:
+            retVal = getIvars(input);
+            break;
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;
@@ -96,7 +104,7 @@ NSData * dispatch_command(command_in *command) {
 }
 
 void async_main() {
-    // logger = os_log_create("com.chrysler.porn", "injected");
+    logger = os_log_create("com.chrysler.porn", "injected");
     
     os_log(logger, "Initial log! Waiting for semaphore now");
     
@@ -145,10 +153,6 @@ end:
 
 __attribute__((constructor))
 void bain() { // big guy, etc.
-    
-    logger = os_log_create("com.chrysler.porn", "injected");
-    os_log(logger, "-1'th log! Waiting for semaphore now");
-    
     // If we do something like sleep() during the constructor phase, the dylib is never considered loaded into the process.
     dispatch_queue_t new_queue = dispatch_queue_create("injected_queue", DISPATCH_QUEUE_SERIAL);
     dispatch_async(new_queue, ^{

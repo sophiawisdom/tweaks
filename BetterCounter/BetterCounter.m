@@ -1,6 +1,6 @@
 //
 //  test_injectable.m
-//  test_injectable
+//  BetterCounter
 //
 //  Created by Sophia Wisdom on 3/16/20.
 //  Copyright © 2020 Sophia Wisdom. All rights reserved.
@@ -8,10 +8,13 @@
 
 #import "BetterCounter.h"
 
-@implementation BetterCounter
+@implementation BetterCounter {
+    int _counter;
+}
 
 - (int)getValue {
-    return 69;
+    _counter += 2;
+    return _counter;
 }
 
 @end

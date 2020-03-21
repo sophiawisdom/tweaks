@@ -9,6 +9,8 @@
 #import "logging.h"
 #include "objc_runtime_getters.h"
 
+#import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #include <mach-o/dyld.h>
 #import <objc/runtime.h>
 #import <dlfcn.h>
@@ -185,3 +187,68 @@ NSString *replace_methods(NSArray<NSDictionary<NSString *, id> *> *switches) {
     
     return @"successful";
 }
+
+NSArray<NSView *> *getOccurencesOfClassInSubviews(Class cls, NSView *view) {
+    NSMutableArray<NSView *> *arr = [[NSMutableArray alloc] init];
+    os_log(logger, "subviews of %{public}@ are %{public}@", view, [view subviews]);
+    for (NSView *subview in [view subviews]) {
+        os_log(logger, "found subview %@ of class %@", subview, [subview class]);
+        if ([subview isKindOfClass:cls]) {
+            [arr addObject:subview];
+        }
+        [arr addObjectsFromArray:getOccurencesOfClassInSubviews(cls, subview)];
+    }
+    return arr;
+}
+
+void spiderView(NSView *view) {
+    for (NSView *subview in [view subviews]) {
+        os_log(logger, "found subview %{public}@ of class %{public}@", subview, [subview class]);
+        spiderView(subview);
+    }
+}
+
+// CalUIBoxOccurrenceContentView
+
+NSString *print_windows() {
+    NSApplication *app = [NSApplication sharedApplication];
+    os_log(logger, "Main window is %{public}@, key window is %{public}@", [app mainWindow], [app keyWindow]);
+    for (NSWindow *window in [[NSApplication sharedApplication] windows]) {
+        os_log(logger, "window is %{public}@ view is %{public}@ and view controller is %{public}@",window, [window contentView], [window contentViewController]);
+        NSView *mainView = [[[window contentViewController] performSelector:@selector(splitViewControllerDelegate)] performSelector:@selector(mainCalendarView)];
+        // NSView *mainView = [[[window contentViewController] splitViewControllerDelegate] mainCalendarView];
+        spiderView(mainView);
+    }
+    
+    Class cls = NSClassFromString(@"CalUIBoxOccurrenceContentView");
+    os_log(logger, "class is %{public}@", cls);
+    // os_log(logger, "Subviews of class %{public}@ are: %{public}@", cls, getOccurencesOfClassInSubviews(cls, contentView));
+    return @"successful";
+}
+
+NSArray<NSArray<id> *> *getIvars(NSString *class) {
+    Class cls = NSClassFromString(class);
+        
+    unsigned int outCount = 0;
+    Ivar *ivars = class_copyIvarList(cls, &outCount);
+    NSMutableArray<NSArray<id> *> *arr = [NSMutableArray arrayWithCapacity:outCount];
+    for (int i = 0; i < outCount; i++) {
+        NSString *name = [NSString stringWithUTF8String:ivar_getName(ivars[i])];
+        NSString *typeEncoding = [NSString stringWithUTF8String:ivar_getTypeEncoding(ivars[i])];
+        NSNumber *offset = @(ivar_getOffset(ivars[i]));
+        [arr setObject:@[name, typeEncoding, offset] atIndexedSubscript:i];
+    }
+    
+    return arr;
+}
+
+/*
+id callMethod(NSDictionary *options) {
+    NSNumber *objNum = [options objectForKey:@"target"];
+    void * objPtr = [objNum unsignedLongValue];
+    id obj = (__bridge id)objPtr;
+    SEL *selector = sel_registerName([[options objectForKey:@"selector"] UTF8String]);
+    
+    [obj performSelector:selector];
+}
+ */

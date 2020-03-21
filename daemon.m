@@ -27,7 +27,11 @@ int main(int argc, char **argv) {
     }
     while (pid == 0) {
         printf("\nInput PID to pause: ");
-        scanf("%d", &pid);
+        int retval = scanf("%d", &pid);
+        if (retval == EOF) {
+            printf("Reached EOF\n");
+            return 1;
+        }
     }
     
     NSDate *injectionBegin = [NSDate date];
@@ -101,6 +105,10 @@ int main(int argc, char **argv) {
                 @"selectors": selectors
             };
             NSLog(@"Got back result: %@", [proc replace_methods:@[switc]]);
+        } else if ([mainInput isEqualToString:@"get_windows"]) {
+            NSLog(@"Got back result: %@", [proc get_windows]);
+        } else if ([mainInput isEqualToString:@"get_ivars"]) {
+            NSLog(@"Ivars are: %@", [proc get_ivars:[words objectAtIndex:1]]);
         } else {
             printf("Unknown command\n");
             continue;

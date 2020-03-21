@@ -17,7 +17,7 @@
 #include <mach-o/dyld_images.h>
 
 // This is to get around sandboxing restrictions
-char *library = "/usr/lib/libinjected_library.dylib";
+char *library = "/usr/lib/injected/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
 
 #define MACH_CALL(kret) if (kret != 0) {\
@@ -321,6 +321,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     
     return handle;
 }
+
 - (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches {
     NSData *resp = [self sendCommand:REPLACE_METHODS withArg:switches];
     if (!resp) {
@@ -335,6 +336,40 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     return handle;
+}
+
+- (NSString *)get_windows {
+    NSData *resp = [self sendCommand:GET_WINDOWS withArg:nil];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class]]];
+    id handle = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return handle;
+}
+
+- (NSArray<NSArray *> *)get_ivars:(NSString *)class {
+    NSData *resp = [self sendCommand:GET_IVARS withArg:class];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class]]];
+    NSArray<NSArray *> *ivars = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return ivars;
 }
 
 
