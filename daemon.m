@@ -21,10 +21,13 @@ NSTimeInterval printTimeSince(NSDate *begin) {
 }
 
 int main(int argc, char **argv) {
+    printf("Location is %s\n", argv[0]);
     int pid = 0;
+
     if (argc > 1) {
         pid = atoi(argv[1]);
     }
+
     while (pid == 0) {
         printf("\nInput PID to pause: ");
         int retval = scanf("%d", &pid);

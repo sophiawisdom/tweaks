@@ -12,9 +12,8 @@
     int _counter;
 }
 
-- (int)getValue {
-    _counter += 2;
-    return _counter;
+- (int)stringValue {
+    
 }
 
 @end

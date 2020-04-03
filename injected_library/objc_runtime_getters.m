@@ -201,28 +201,51 @@ NSArray<NSView *> *getOccurencesOfClassInSubviews(Class cls, NSView *view) {
     return arr;
 }
 
-void spiderView(NSView *view) {
+NSArray<NSView *> *spiderView(NSView *view) {
+    NSMutableArray<NSView *> *views = [[NSMutableArray alloc] initWithArray:[view subviews]];
     for (NSView *subview in [view subviews]) {
-        os_log(logger, "found subview %{public}@ of class %{public}@", subview, [subview class]);
-        spiderView(subview);
+        [views addObjectsFromArray:spiderView(subview)];
     }
+    return views;
 }
 
 // CalUIBoxOccurrenceContentView
 
+void turnBackgroundGreen(NSView *view) {
+    NSColor *green = [NSColor colorWithCalibratedRed:0.0 green:1.0 blue:0.0 alpha:1.0f];
+    [view layer].backgroundColor = [green CGColor];
+    [view display];
+    [view updateLayer];
+}
+
 NSString *print_windows() {
+    os_log(logger, "new print windows");
     NSApplication *app = [NSApplication sharedApplication];
     os_log(logger, "Main window is %{public}@, key window is %{public}@", [app mainWindow], [app keyWindow]);
-    for (NSWindow *window in [[NSApplication sharedApplication] windows]) {
-        os_log(logger, "window is %{public}@ view is %{public}@ and view controller is %{public}@",window, [window contentView], [window contentViewController]);
-        NSView *mainView = [[[window contentViewController] performSelector:@selector(splitViewControllerDelegate)] performSelector:@selector(mainCalendarView)];
-        // NSView *mainView = [[[window contentViewController] splitViewControllerDelegate] mainCalendarView];
-        spiderView(mainView);
+    for (NSWindow *window in [app windows]) {
+        NSView *mainView = [[window contentView] superview];
+        NSArray<NSView *> * views = spiderView(mainView);
+        
+        NSMutableSet<Class> *classes = [[NSMutableSet alloc] init];
+        // possibly would be better to iterate through all classes to see if they are subclasses...
+        Class cls = [NSTextField class];
+        for (NSView *view in views) {
+            // os_log(logger, "Got view %{public}@", view);
+            if ([[view class] isSubclassOfClass:cls]) {
+                [classes addObject:[view class]];
+            }
+            // [view layer].backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 1);
+             
+            if ([view isKindOfClass:[NSTextField class]]) {
+                NSTextField *control = (NSTextField *)view;
+                [control setStringValue:@"penis"];
+              // running twice causes crash, i think because it tries to deallocate a constant string?
+            }
+        }
+        
+        os_log(logger, "classes are %{public}@", classes);
     }
     
-    Class cls = NSClassFromString(@"CalUIBoxOccurrenceContentView");
-    os_log(logger, "class is %{public}@", cls);
-    // os_log(logger, "Subviews of class %{public}@ are: %{public}@", cls, getOccurencesOfClassInSubviews(cls, contentView));
     return @"successful";
 }
 

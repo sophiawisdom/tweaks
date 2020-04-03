@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6536A071241F6D3600DE08F0"
-               BuildableName = "libtest_injectable.dylib"
-               BlueprintName = "test_injectable"
+               BlueprintIdentifier = "6548202B2435412100DE052B"
+               BuildableName = "tweaks.app"
+               BlueprintName = "tweaks"
                ReferencedContainer = "container:mods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,6 +28,26 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6548203F2435412500DE052B"
+               BuildableName = "tweaksTests.xctest"
+               BlueprintName = "tweaksTests"
+               ReferencedContainer = "container:mods.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6548204A2435412500DE052B"
+               BuildableName = "tweaksUITests.xctest"
+               BlueprintName = "tweaksUITests"
+               ReferencedContainer = "container:mods.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -40,6 +60,16 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "6548202B2435412100DE052B"
+            BuildableName = "tweaks.app"
+            BlueprintName = "tweaks"
+            ReferencedContainer = "container:mods.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -47,15 +77,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6536A071241F6D3600DE08F0"
-            BuildableName = "libtest_injectable.dylib"
-            BlueprintName = "test_injectable"
+            BlueprintIdentifier = "6548202B2435412100DE052B"
+            BuildableName = "tweaks.app"
+            BlueprintName = "tweaks"
             ReferencedContainer = "container:mods.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
