@@ -6,6 +6,8 @@
 
 #import "Process.h"
 
+#import "macho_parser.h"
+
 #define MACH_CALL(kret) if (kret != 0) {\
 printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
 exit(1);\
@@ -27,6 +29,8 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         pid = atoi(argv[1]);
     }
+    
+    usleep(500000);
 
     while (pid == 0) {
         printf("\nInput PID to pause: ");

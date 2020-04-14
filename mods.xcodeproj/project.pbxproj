@@ -29,6 +29,8 @@
 		65C18784241791F000D42952 /* objc_runtime_getters.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C18782241791F000D42952 /* objc_runtime_getters.h */; };
 		65C18785241791F000D42952 /* objc_runtime_getters.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C18783241791F000D42952 /* objc_runtime_getters.m */; };
 		65C187872417928600D42952 /* logging.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C187862417928600D42952 /* logging.h */; };
+		65C5DDC7243EC2970072276D /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
+		65C5DDC8243EC2970072276D /* libmacho-parser.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		65F11996240CDFC400C8F55D /* macho_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F11994240CDFC300C8F55D /* macho_parser.h */; };
 		65F11997240CDFC400C8F55D /* macho_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F11995240CDFC400C8F55D /* macho_parser.c */; };
 		65F766C1240B67F100D94665 /* injected_library.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.m */; };
@@ -69,6 +71,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 655A788524353E5200532DFD;
 			remoteInfo = injector_lib;
+		};
+		65C5DDC9243EC2970072276D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 65F1198A240CDEF500C8F55D;
+			remoteInfo = "macho-parser";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -128,6 +137,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				65C5DDC8243EC2970072276D /* libmacho-parser.dylib in Embed Libraries */,
 				655A789324353EF700532DFD /* libinjector_lib.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
@@ -182,6 +192,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65C5DDC7243EC2970072276D /* libmacho-parser.dylib in Frameworks */,
 				655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -431,6 +442,7 @@
 			);
 			dependencies = (
 				655A789524353EF700532DFD /* PBXTargetDependency */,
+				65C5DDCA243EC2970072276D /* PBXTargetDependency */,
 			);
 			name = daemon;
 			productName = daemon;
@@ -777,6 +789,11 @@
 			isa = PBXTargetDependency;
 			target = 655A788524353E5200532DFD /* injector_lib */;
 			targetProxy = 655A789424353EF700532DFD /* PBXContainerItemProxy */;
+		};
+		65C5DDCA243EC2970072276D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 65F1198A240CDEF500C8F55D /* macho-parser */;
+			targetProxy = 65C5DDC9243EC2970072276D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

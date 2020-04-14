@@ -73,16 +73,21 @@ uint64_t getSymbolOffset(const char *dylib, char *symbol) {
         int cmd = current_command -> cmd;
         if (cmd == LC_SYMTAB) {
             struct symtab_command *symbols = current_command;
-            char *string_list = (uint64_t)header + symbols -> stroff;
+            char *string_list = (char *)header + symbols -> stroff;
             struct nlist_64 *nlist = (uint64_t)header + symbols -> symoff; // Symbol offset is from the header...
             for (int j = 0; j < symbols -> nsyms; j++) {
                 char *sym = string_list + nlist -> n_un.n_strx;
                 if (strcmp(sym, symbol) == 0 && nlist -> n_value != 0) {
                     uint64_t val = nlist -> n_value; // disappears after munmap()
+                    if ((j+1) < symbols -> nsyms) {
+                        uint64_t next_val = (nlist+1) -> n_value;
+                        printf("val extends from %llu to %llu (size %llu)\n", val, next_val, next_val - val);
+                    }
                     close(fd);
                     munmap(map, st.st_size);
                     return val;
                 }
+                
                 nlist++; // maybe do something clever with initializing this with the for loop
             }
         }

@@ -14,6 +14,7 @@
 #include <mach-o/dyld.h>
 #import <objc/runtime.h>
 #import <dlfcn.h>
+#import <CoreGraphics/CoreGraphics.h>
 
 // The reason why it's structured like this, with multiple levels to get down
 // to a particular selector, is because for applications that link a lot of frameworks
@@ -55,7 +56,9 @@ NSArray<NSString *> * get_classes_for_image(NSString *image) {
 }
 
 NSString * get_superclass_for_class(NSString *className) {
-    return NSStringFromClass(class_getSuperclass(NSClassFromString(className)));
+    Class cls = NSClassFromString(className);
+    os_log(logger, "Class is %{public}@, %{public}p", cls, cls);
+    return NSStringFromClass(class_getSuperclass(cls));
 }
 
 // As of now, this only gets instance methods. TODO: handle class methods also with class_copyMethodList(object_getClass(cls), &count)
@@ -201,16 +204,6 @@ NSArray<NSView *> *getOccurencesOfClassInSubviews(Class cls, NSView *view) {
     return arr;
 }
 
-NSArray<NSView *> *spiderView(NSView *view) {
-    NSMutableArray<NSView *> *views = [[NSMutableArray alloc] initWithArray:[view subviews]];
-    for (NSView *subview in [view subviews]) {
-        [views addObjectsFromArray:spiderView(subview)];
-    }
-    return views;
-}
-
-// CalUIBoxOccurrenceContentView
-
 void turnBackgroundGreen(NSView *view) {
     NSColor *green = [NSColor colorWithCalibratedRed:0.0 green:1.0 blue:0.0 alpha:1.0f];
     [view layer].backgroundColor = [green CGColor];
@@ -218,32 +211,233 @@ void turnBackgroundGreen(NSView *view) {
     [view updateLayer];
 }
 
+NSArray<NSView *> *spiderView(NSView *view) {
+    NSValue *packedParentPosition = (NSValue *)objc_getAssociatedObject([view superview], 691214);
+    CGPoint parentPosition;
+    [packedParentPosition getValue:&parentPosition];
+    CGPoint myRelativePosition = [[view layer] position];
+    CGPoint myPosition = {.x = parentPosition.x + myRelativePosition.x, .y = parentPosition.y + myRelativePosition.y};
+    
+    objc_setAssociatedObject(view, 691214, [NSValue valueWithBytes:&myPosition objCType:@encode(CGPoint)], OBJC_ASSOCIATION_COPY_NONATOMIC);
+    NSMutableArray<NSView *> *views = [[NSMutableArray alloc] initWithArray:[view subviews]];
+    for (NSView *subview in [view subviews]) {
+        [views addObjectsFromArray:spiderView(subview)];
+    }
+    return views;
+}
+
+NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
+    return [[NSBitmapImageRep alloc]
+     initWithBitmapDataPlanes:NULL
+     pixelsWide:size.width
+     pixelsHigh:size.height
+     bitsPerSample:8
+     samplesPerPixel:4 // with alpha this needs to be 4
+     hasAlpha:YES
+     isPlanar:NO
+     colorSpaceName:NSDeviceRGBColorSpace
+     bytesPerRow:0
+     bitsPerPixel:0];
+}
+
 NSString *print_windows() {
-    os_log(logger, "new print windows");
+    setenv("CG_CONTEXT_SHOW_BACKTRACE", "true", 1);
+    
     NSApplication *app = [NSApplication sharedApplication];
     os_log(logger, "Main window is %{public}@, key window is %{public}@", [app mainWindow], [app keyWindow]);
+    
+    os_log(logger, "image is %{public}@", emptyImageForDrawing((CGSize){.height=100, .width=200}));
+    
     for (NSWindow *window in [app windows]) {
         NSView *mainView = [[window contentView] superview];
+        
+        os_log(logger, "main content scale is %f", [[mainView layer] contentsScale]);
+        
+        CGPoint myPosition = [[mainView layer] position];
+        objc_setAssociatedObject(mainView, 691214, [NSValue valueWithBytes:&myPosition objCType:@encode(CGPoint)], OBJC_ASSOCIATION_COPY_NONATOMIC);
+        
         NSArray<NSView *> * views = spiderView(mainView);
+        // views = [views subarrayWithRange:NSMakeRange(0, 50)];
+                        
+        CGImageRef image = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, (CGWindowID)[window windowNumber], kCGWindowImageBoundsIgnoreFraming);
+        NSImage *img = [[NSImage alloc] initWithCGImage:image size:NSZeroSize];
+        
+        NSMutableArray<NSValue *> *rects = [[NSMutableArray alloc] initWithCapacity:views.count];
+        
+        NSMutableArray<NSBitmapImageRep *> *reps = [[NSMutableArray alloc] init];
+        NSMutableArray<NSData *> *datas = [[NSMutableArray alloc] init];
         
         NSMutableSet<Class> *classes = [[NSMutableSet alloc] init];
         // possibly would be better to iterate through all classes to see if they are subclasses...
         Class cls = [NSTextField class];
+        
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+        
+        [NSGraphicsContext saveGraphicsState];
+        
         for (NSView *view in views) {
             // os_log(logger, "Got view %{public}@", view);
             if ([[view class] isSubclassOfClass:cls]) {
                 [classes addObject:[view class]];
             }
+            
+            NSSize frameSize = [view frame].size;
+            if (frameSize.width * frameSize.height == 0) {
+                continue;
+            }
+            
+            /*
+            NSRect rect = [view frame]; // also plausible - [view visibleArea]
+            NSBitmapImageRep *cachedView = [view bitmapImageRepForCachingDisplayInRect:rect];
+            
+            // in a sane world, we would be using [NSView cacheDisplayInRect:toBitmapImageRep:]
+            // However, that calls (through a sequence of things) -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]
+            // and because we are not on the main thread we cannot do UI work (like layout subtrees).
+            
+            [view setNeedsLayout:NO];
+            [view cacheDisplayInRect:rect toBitmapImageRep:cachedView];
+            [reps addObject:cachedView];
+            continue;
+             */
+                        
+            os_log(logger, "width is %f, height is %f", frameSize.width, frameSize.height);
+            NSBitmapImageRep *rep = emptyImageForDrawing(frameSize);
+            os_log(logger, "created rep %{public}@", rep);
+            // there are more efficient ways of doing this...
+            NSMutableData *dat = [[NSMutableData alloc] initWithCapacity:1024*1024*64/*frameSize.width*frameSize.height*8*/];
+            os_log(logger, "allocated data %{public}@", dat);
+            NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithAttributes:@{
+                NSGraphicsContextDestinationAttributeName: dat,
+                NSGraphicsContextRepresentationFormatAttributeName: NSGraphicsContextPDFFormat
+            }];
+            os_log(logger, "graphics context is %{public}@", context);
+            // NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
+            [NSGraphicsContext setCurrentContext:context];
+            
+            /*
+             let transform = NSAffineTransform()
+             transform.translateX(by: flipHorizontally ? size.width : 0, yBy: flipVertically ? size.height : 0)
+             transform.scaleX(by: flipHorizontally ? -1 : 1, yBy: flipVertically ? -1 : 1)
+             transform.concat()
+             */
+            
+            NSAffineTransform *flipTransform = [[NSAffineTransform alloc] init];
+            [flipTransform translateXBy:frameSize.width yBy:0];
+            [flipTransform scaleXBy:-1 yBy:1];
+            [flipTransform concat];
+            [[view layer] drawInContext:context.CGContext];
+            
+            [context flushGraphics];
+            os_log(logger, "just wrote to mutable data: %{public}@", dat);
+            [reps addObject:rep];
+
+            gettimeofday(&start, NULL);
+            // unsigned char *rawBitmapData = [rep bitmapData];
+            // NSData *bitmapData = [[NSData alloc] initWithBytesNoCopy:rawBitmapData length:4*frameSize.width*frameSize.height freeWhenDone:false];
+            os_log(logger, "sending back data %{public}@ (bitmap data isn't)", dat);
+            
+            os_log(logger, "reps is about to add object %{public}@", rep);
+            [reps addObject:rep];
+            
+            NSValue *packedPosition = (NSValue *)objc_getAssociatedObject([view superview], 691214);
+            CGPoint pos;
+            [packedPosition getValue:&pos];
+            
+            CGRect viewRect = [view frame];
+            viewRect.origin = (CGPoint){.x = viewRect.origin.x + pos.x, .y = viewRect.origin.y + pos.y};
+            float scale = [[view layer] contentsScale];
+            viewRect.origin = (CGPoint){.x = viewRect.origin.x*[[view layer] contentsScale], .y=viewRect.origin.y*[[view layer] contentsScale]};
+            viewRect.size = (CGSize){.width=viewRect.size.width *[[view layer] contentsScale], .height=viewRect.size.height*[[view layer] contentsScale]};
+            
+            [rects addObject:[NSValue valueWithRect:viewRect]];
+                        
+            os_log(logger, "[[view layer] class] is %{public}@", [[view layer] class]);
             // [view layer].backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 1);
              
+            /*
             if ([view isKindOfClass:[NSTextField class]]) {
                 NSTextField *control = (NSTextField *)view;
                 [control setStringValue:@"penis"];
               // running twice causes crash, i think because it tries to deallocate a constant string?
-            }
+            }*/
         }
         
+        [NSGraphicsContext restoreGraphicsState];
+        
+        gettimeofday(&end, NULL);
+        float diff = (end.tv_usec - start.tv_usec) + ((end.tv_sec - start.tv_sec)*1000000);
+        diff /= 1000000;
+        os_log(logger, "Took %f seconds to get all reps", diff);
+        
+        // NSData *result = [NSBitmapImageRep representationOfImageRepsInArray:reps usingType:NSBitmapImageFileTypePNG properties:nil];
+        gettimeofday(&start, NULL);
+        unsigned long long sz = 0;
+        for (NSData *dat in datas) {
+            sz += [dat length];
+        }
+        gettimeofday(&end, NULL);
+        diff = (end.tv_usec - start.tv_usec) + ((end.tv_sec - start.tv_sec)*1000000);
+        diff /= 1000000;
+        os_log(logger, "Took %f seconds to get all tiff datas. total size is %llu", diff, sz);
+        
+        /*
+        // NSData *dat = [NSBitmapImageRep representationOfImageRepsInArray:reps usingType:NSBitmapImageFileTypeTIFF properties:nil];
+        NSData *dat = [NSBitmapImageRep TIFFRepresentationOfImageRepsInArray:reps usingCompression:NSTIFFCompressionLZW factor:2];
+         */
+        return @"hey!";
+        //os_log(logger, "sending back data %{public}@", dat);
+        // return dat;
+        
+        unsigned long long size = 0;
+        for (NSData *dat in reps) {
+            size += [dat length];
+        }
+        
+        os_log(logger, "size is %{public}llu", size);
+        
+        mach_vm_address_t addr;
+        // mach_vm_allocate(mach_task_self(), &addr, size+4096, <#int flags#>)
+        
+        return reps;
+        
         os_log(logger, "classes are %{public}@", classes);
+        
+        os_log(logger, "rects are %{public}@", rects);
+        
+        NSImage *imgWithFrames = [NSImage imageWithSize:[img size] flipped:false drawingHandler:^BOOL(NSRect dstRect) {
+            [img drawInRect:dstRect];
+            
+            for (NSValue *rect in rects) {
+                NSRect r = [rect rectValue];
+                NSFrameRect(r);
+            }
+            
+            return YES;
+        }];
+        
+        os_log(logger, "image %{public}@", imgWithFrames);
+        
+        NSBitmapImageRep *rep = (NSBitmapImageRep *)[imgWithFrames.representations firstObject];
+        
+        os_log(logger, "rep %{public}@. planar is %{public}d. numberOfPlanes is %{public}ld", rep, rep.planar, rep.numberOfPlanes);
+        
+        while (imgWithFrames.representations.count > 1) {
+            [imgWithFrames removeRepresentation:[imgWithFrames.representations lastObject]];
+            [imgWithFrames removeRepresentation:[imgWithFrames.representations lastObject]];
+        }
+        
+        os_log(logger, "image %{public}@", imgWithFrames);
+        
+        return [imgWithFrames.representations firstObject];
+        
+        os_log(logger, "image %{public}@", imgWithFrames);
+        NSData *tiffData = [imgWithFrames TIFFRepresentation];
+        int fd = open("window.tiff", O_WRONLY | O_CREAT);
+
+        os_log(logger, "Error is %{public}s", strerror(errno));
+        write(fd, [tiffData bytes], [tiffData length]);
+        close(fd);
     }
     
     return @"successful";

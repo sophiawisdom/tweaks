@@ -49,7 +49,7 @@ NSData * dispatch_command(command_in *command) {
         }
     }
     
-    id retVal = nil;
+    id<NSObject> retVal = nil;
     
     os_log(logger, "on the new stuff");
     
@@ -91,6 +91,8 @@ NSData * dispatch_command(command_in *command) {
     
     if (retVal == nil) {
         return nil;
+    } else if ([retVal isKindOfClass:[NSData class]]) {
+        return (NSData *)retVal;
     }
     
     NSError *err = nil;
@@ -104,7 +106,7 @@ NSData * dispatch_command(command_in *command) {
 }
 
 void async_main() {
-    logger = os_log_create("com.chrysler.porn", "injected");
+    logger = os_log_create("com.tweaks.injected", "injected");
     
     os_log(logger, "Initial log! Waiting for semaphore now");
     
@@ -123,9 +125,8 @@ void async_main() {
         if (kr == KERN_TERMINATED) {
             // Host process has exited
             break;
-        } else if (kr != KERN_SUCCESS) {
-            MACH_CALL(kr);
         }
+        MACH_CALL(kr);
         
         // We have a message, now to interpret it.
         os_log(logger, "Got new command. cmd is %x\n", command -> cmd);
@@ -138,7 +139,7 @@ void async_main() {
         // More efficient than memcpy(), though we incur syscall overhead. This could be >1MB though, so probably worthwhile.
         // In the ideal case, the NSData was just allocated in our map in the first place but I don't know how to do that.
         // TODO: check if command_output is bigger than shmem
-        mach_vm_copy(mach_task_self(), [command_output bytes], [command_output length], shmem_loc+4096);
+        MACH_CALL(mach_vm_copy(mach_task_self(), [command_output bytes], [command_output length], shmem_loc+4096));
         output.shmem_offset = 4096;
         output.len = [command_output length];
 
@@ -154,6 +155,7 @@ end:
 __attribute__((constructor))
 void bain() { // big guy, etc.
     // If we do something like sleep() during the constructor phase, the dylib is never considered loaded into the process.
+    // This makes the dylib be considered "loaded" as fast as possible, and allows destruction of the thread this was on.
     dispatch_queue_t new_queue = dispatch_queue_create("injected_queue", DISPATCH_QUEUE_SERIAL);
     dispatch_async(new_queue, ^{
         async_main();

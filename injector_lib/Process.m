@@ -16,6 +16,8 @@
 
 #include <mach-o/dyld_images.h>
 
+#import <AppKit/AppKit.h>
+
 // This is to get around sandboxing restrictions
 char *library = "/usr/lib/injected/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
@@ -62,38 +64,48 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     MACH_CALL(semaphore_create(mach_task_self(), &_sem, SYNC_POLICY_FIFO, 0));
-    MACH_CALL(mach_port_insert_right(_remoteTask,
+    kr = mach_port_insert_right(_remoteTask,
                            SEM_PORT_NAME, // Randomly generated port name. This will be how the target task can access the semaphore
                                           // In theory this could collide with an existing one but in practice this is unlikely.
                            _sem, //
-                           MACH_MSG_TYPE_COPY_SEND)); // Semaphores give a send right (b/c receive in kernel)
+                           MACH_MSG_TYPE_COPY_SEND); // Semaphores give a send right (b/c receive in kernel)
+
+    if (kr == KERN_NAME_EXISTS) { // "name exists" i.e. we have already injected into this process
+        fprintf(stderr, "We have already injected into this process. injecting twice isn't supported yet\n");
+        return nil;
+    }
+    MACH_CALL(kr);
 
     kr = inject(_remoteTask, library);
+    // From this point, the process is running
     if (kr < 0) {
         fprintf(stderr, "Encountered error with injection: %d\n", _remoteTask);
         return nil; // Error
     }
     
-    // Allocate remote memory. This will be the location of the mapping in the target process
+    // Allocate memory in the target process's address space. This memory will later be mapped
+    // into our process as well to establish direct data transfer.
     _remoteShmemAddress = 0;
-    memory_object_size_t remoteMemorySize = MAP_SIZE;
+    memory_object_size_t remoteMemorySize = MAP_SIZE; // variable because we have to pass pointers to it
     MACH_CALL(mach_vm_allocate(_remoteTask, &_remoteShmemAddress, remoteMemorySize, true));
     
-    // Once we've created the memory, we need a handle to that memory so we can reference it in mach_vm_map.
+    // mach_vm_map takes memory handles (ports), not raw addresses, so we need to get
+    // a handle to the memory we just allocated.
     _shared_memory_handle = MACH_PORT_NULL;
     MACH_CALL(mach_make_memory_entry_64(_remoteTask,
                               &remoteMemorySize,
-                              _remoteShmemAddress, // Memory address
+                              _remoteShmemAddress, // Memory we're getting a handle for
                               VM_PROT_READ | VM_PROT_WRITE,
                               &_shared_memory_handle,
                               MACH_PORT_NULL)); // parent entry - for submaps?
-        
-    // Create the mapping between the objects.
+    
+    // Create the mapping between the memory we just allocated in the remote process
+    // and our process.
     _localShmemAddress = 0;
     // https://flylib.com/books/en/3.126.1.89/1/ has some documentation on this
     MACH_CALL(mach_vm_map(mach_task_self(),
-                &_localShmemAddress, // Address in this address space?
-                remoteMemorySize, // size. Maybe worth allocating a direct data transfer space and then also opening a larger map?
+                &_localShmemAddress, // Address in this address space
+                remoteMemorySize,
                 0xfff, // Alignment bits - make it page aligned
                 true, // Anywhere bit
                 _shared_memory_handle,
@@ -344,12 +356,28 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
         return nil;
     }
     
+    [resp writeToFile:@"/users/sophiawisdom/tweaks/images/number_nine.pdf" atomically:false];
+    NSLog(@"Data is %@", resp);
+    return @"";
+    
+    BOOL res = [resp writeToFile:@"/users/sophiawisdom/tweaks/images/image.tiff" atomically:false];
+    NSLog(@"Wrote data %@ to file. result was %d", resp, res);
+    
     NSError *err = nil;
-    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class]]];
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class], [NSImage class], [NSBitmapImageRep class]]];
     id handle = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
     if (err) {
         NSLog(@"Encountered error in deserializing response dictionary: %@", err);
         return nil;
+    }
+    
+    NSArray<NSBitmapImageRep *> *images = (NSArray *)handle;
+    
+    int i = 0;
+    for (NSBitmapImageRep *rep in images) {
+        NSString *path = [NSString stringWithFormat:@"/users/sophiawisdom/tweaks/images/%d.tiff", i++];
+        BOOL res = [[rep TIFFRepresentation] writeToFile:path atomically:false];
+        NSLog(@"Res was %d for path %@", res, path);
     }
     
     return handle;
@@ -372,8 +400,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     return ivars;
 }
 
-
-// In dealloc() we need to communicate to the injected library to exit, and perhaps for it to
+// In dealloc() we need to communicate to the injected library to exit
 /*
 - (void)dealloc
 {
