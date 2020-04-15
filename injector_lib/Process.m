@@ -12,7 +12,7 @@
 #include "inject.h"
 #include "internal_injection_interface.h"
 #include "symbol_locator.h"
-
+#include <dlfcn.h>
 
 #include <mach-o/dyld_images.h>
 
@@ -40,6 +40,8 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     mach_port_t _shared_memory_handle; // handle for mach_vm_allocate()'d memory in remote process
     semaphore_t _sem; // semaphore used for communication
     mach_vm_address_t _dylib_addr; // Location of dylib on other side
+    
+    NSMutableArray<NSNumber *> *_dlopen_handles;
 }
 
 - (instancetype)initWithPid:(pid_t)pid {
@@ -47,6 +49,8 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     if (!self) {
         return nil;
     }
+    
+    _dlopen_handles = [[NSMutableArray alloc] init];
     
     // It's a little bit inefficient to run this every time, but this should be run pretty rarely.
     mach_vm_offset_t shmem_sym_offset = getSymbolOffset(library, shmem_symbol); // We can't take the typical path of just
@@ -350,21 +354,138 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     return handle;
 }
 
+NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
+    return [[NSBitmapImageRep alloc]
+     initWithBitmapDataPlanes:NULL
+     pixelsWide:size.width
+     pixelsHigh:size.height
+     bitsPerSample:8
+     samplesPerPixel:4 // with alpha this needs to be 4
+     hasAlpha:YES
+     isPlanar:NO
+     colorSpaceName:NSDeviceRGBColorSpace
+     bytesPerRow:0
+     bitsPerPixel:0];
+}
+
 - (NSString *)get_windows {
+    NSData *layerImagesData = [self sendCommand:GET_LAYER_IMAGES withArg:nil];
+    if (!layerImagesData) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSSet<Class> *layerImagesClasses = [NSSet setWithArray:@[[NSArray class], [NSString class]]];
+    NSArray<NSString *> *layerImages = [NSKeyedUnarchiver unarchivedObjectOfClasses:layerImagesClasses fromData:layerImagesData error:&err];
+    if (err) {
+        NSLog(@"got error deserializing layer images: %@", err);
+        return nil;
+    }
+    for (NSString *layerImage in layerImages) {
+        void *handle = dlopen([layerImage UTF8String], RTLD_LAZY);
+        if (!handle) {
+            NSLog(@"Got back nil handle when dlopen'ing image \"%@\". error is %s", layerImage, dlerror());
+            return nil;
+        }
+        
+        // so we can free them later. for now we want to keep them open because if get_windows
+        // is called again we don't want to reopen all the dylibs.
+        [_dlopen_handles addObject:[[NSNumber alloc] initWithUnsignedLongLong:handle]];
+    }
+    
+    // It's possible that in between doing the first call and the second there are different classes in the view
+    // hierarchy. TODO: deal with that.
+    // Now we should have all the CALayer classes in our process, so we're now ready to get the serialized CALayer hierarchy.
+    
     NSData *resp = [self sendCommand:GET_WINDOWS withArg:nil];
     if (!resp) {
         return nil;
     }
     
-    [resp writeToFile:@"/users/sophiawisdom/tweaks/images/number_nine.pdf" atomically:false];
-    NSLog(@"Data is %@", resp);
+    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [CALayer class], [NSImage class]]];
+    err = nil;
+    // Sometimes applications will subclass CALayer, and so if we want to unarchive them we have to have their
+    // definitions. This is a pretty weird way of handling this, but it works. The potential issues are if a)
+    // the library we open has static initializers that put us in a weird state or
+    // b) the NSSecureCoding implementation is defined in a category in another library.
+    NSArray<CALayer *> *layers = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:resp error:&err];
+    // NSArray<CALayer *> *layers = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
+    /*
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@. info is %@", err, [err userInfo]);
+        NSString *debugDescription = [[err userInfo] objectForKey:NSDebugDescriptionErrorKey];
+        NSError *regexErr = nil;
+        NSRegularExpression *regex = [[NSRegularExpression alloc] initWithPattern:@"\"(.*?)\"" options:0 error:&regexErr];
+        if (regexErr) {
+            NSLog(@"Got regular expression error %@", regexErr);
+            return nil;
+        }
+        NSRange rng = [regex rangeOfFirstMatchInString:debugDescription options:0 range:NSMakeRange(0, [debugDescription length])];
+        NSLog(@"Range starts at %d length %d", rng.location, rng.length);
+        if (NSEqualRanges(rng, NSMakeRange(NSNotFound, 0))) {
+            NSLog(@"Unable to find class causing CALayer error");
+            return nil;
+        }
+        NSString *classCausingError = [debugDescription substringWithRange:rng];
+        classCausingError = [classCausingError stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+        NSLog(@"Class causing error is \"%@\"", classCausingError);
+        NSString *imageContainingClass = [self get_image_for_class:classCausingError];
+        NSLog(@"image containg class is %@", imageContainingClass);
+        void *handle = dlopen([imageContainingClass UTF8String], RTLD_LAZY);
+        NSLog(@"Handle is %p, error is %s", handle, dlerror());
+        
+        // so we can free them later. for now we want to keep them open because if get_windows
+        // is called again we don't want to reopen all the dylibs.
+        [_dlopen_handles addObject:[[NSNumber alloc] initWithUnsignedLongLong:handle]];
+        
+        err = nil;
+    }*/
+    
+    if (err) {
+        NSLog(@"Continue to have error: %@", err);
+        return nil;
+    }
+    
+    NSLog(@"Layers are %@, err is %@", layers, err);
+    
+    [NSGraphicsContext saveGraphicsState];
+    
+    NSMutableArray<NSBitmapImageRep *> *reps = [[NSMutableArray alloc] init];
+    
+    for (CALayer *layer in layers) {
+        NSSize frameSize = [layer frame].size;
+        if (frameSize.width * frameSize.height == 0) {
+            NSLog(@"Encountered zero size layer: %@", layer);
+            continue;
+        }
+        NSBitmapImageRep *rep = emptyImageForDrawing([layer frame].size);
+        NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
+        [NSGraphicsContext setCurrentContext:context];
+        
+        NSAffineTransform *flipTransform = [[NSAffineTransform alloc] init];
+        [flipTransform translateXBy:frameSize.width yBy:0];
+        [flipTransform scaleXBy:-1 yBy:1];
+        [flipTransform concat];
+        [layer drawInContext:context.CGContext];
+        
+        [context flushGraphics];
+        [reps addObject:rep];
+    }
+    
+    [NSGraphicsContext restoreGraphicsState];
+    
+    NSLog(@"About to get tiff representation");
+    NSData *tiffRepresentation = [NSBitmapImageRep TIFFRepresentationOfImageRepsInArray:reps usingCompression:NSTIFFCompressionLZW factor:2];
+    // NSData *tiffRepresentation = [NSBitmapImageRep representationOfImageRepsInArray:reps usingType:NSBitmapImageFileTypeTIFF properties:nil];
+    NSLog(@"tiff representation is %@", tiffRepresentation);
+    [tiffRepresentation writeToFile:@"/users/sophiawisdom/tweaks/images/new_files.tiff" atomically:false];
+    
     return @"";
     
     BOOL res = [resp writeToFile:@"/users/sophiawisdom/tweaks/images/image.tiff" atomically:false];
     NSLog(@"Wrote data %@ to file. result was %d", resp, res);
     
-    NSError *err = nil;
-    NSSet<Class> *archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class], [NSImage class], [NSBitmapImageRep class]]];
+    archiveClasses = [NSSet setWithArray:@[[NSArray class], [NSString class], [NSDictionary class], [NSSet class], [NSNumber class], [NSImage class], [NSBitmapImageRep class], [CALayer class]]];
     id handle = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
     if (err) {
         NSLog(@"Encountered error in deserializing response dictionary: %@", err);
@@ -398,6 +519,28 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     return ivars;
+}
+
+- (NSString *)get_image_for_class:(NSString *)cls {
+    NSData *resp = [self sendCommand:GET_IMAGE_FOR_CLASS withArg:cls];
+    if (!resp) {
+        return nil;
+    }
+    
+    NSError *err = nil;
+    NSString *image = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSNumber class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return image;
+}
+
+- (void)draw_layers {
+    NSData *resp = [self sendCommand:DRAW_LAYERS withArg:nil];
+    NSLog(@"Got response back %@", resp);
+    [resp writeToFile:@"/users/sophiawisdom/tweaks/layers.tiff" atomically:NO];
 }
 
 // In dealloc() we need to communicate to the injected library to exit

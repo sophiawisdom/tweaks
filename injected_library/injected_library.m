@@ -78,12 +78,20 @@ NSData * dispatch_command(command_in *command) {
         case GET_PROPERTIES_FOR_CLASS:
             retVal = get_properties_for_class(input);
             break;
+        case GET_LAYER_IMAGES:
+            retVal = get_layer_images();
+            break;
         case GET_WINDOWS:
-            retVal = print_windows();
+            retVal = get_layers();
             break;
         case GET_IVARS:
             retVal = getIvars(input);
             break;
+        case GET_IMAGE_FOR_CLASS:
+            retVal = get_image_for_class(input);
+            break;
+        case DRAW_LAYERS:
+            retVal = draw_layers();
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;

@@ -21,8 +21,16 @@ typedef enum {
     REPLACE_METHODS,
     GET_PROPERTIES_FOR_CLASS,
     GET_WINDOWS,
-    GET_IVARS
+    GET_IVARS,
+    GET_IMAGE_FOR_CLASS,
+    GET_LAYER_IMAGES,
+    DRAW_LAYERS
 } command_type;
+
+
+// #define'd because this header is used in multiple object files straight up
+#define layerImagesKey @"layerImages"
+#define layerArrayKey @"layerArray"
 
 // Once this is set, target process will begin processing data
 #define NEW_IN_DATA 0x12345678

@@ -26,6 +26,7 @@
 		655A789124353E5F00532DFD /* symbol_locator.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.m */; };
 		655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; };
 		655A789324353EF700532DFD /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		659F29922446608400B78C44 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659F29912446608400B78C44 /* AppKit.framework */; };
 		65C18784241791F000D42952 /* objc_runtime_getters.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C18782241791F000D42952 /* objc_runtime_getters.h */; };
 		65C18785241791F000D42952 /* objc_runtime_getters.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C18783241791F000D42952 /* objc_runtime_getters.m */; };
 		65C187872417928600D42952 /* logging.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C187862417928600D42952 /* logging.h */; };
@@ -172,6 +173,7 @@
 		655A788624353E5200532DFD /* libinjector_lib.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector_lib.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		656AC2D8241DA48000B728A6 /* Process.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Process.h; sourceTree = "<group>"; };
 		656AC2D9241DA48000B728A6 /* Process.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Process.m; sourceTree = "<group>"; };
+		659F29912446608400B78C44 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		65C18782241791F000D42952 /* objc_runtime_getters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = objc_runtime_getters.h; sourceTree = "<group>"; };
 		65C18783241791F000D42952 /* objc_runtime_getters.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = objc_runtime_getters.m; sourceTree = "<group>"; };
 		65C187862417928600D42952 /* logging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = logging.h; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				659F29922446608400B78C44 /* AppKit.framework in Frameworks */,
 				65C5DDC7243EC2970072276D /* libmacho-parser.dylib in Frameworks */,
 				655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */,
 			);
@@ -383,6 +386,7 @@
 		65F1199A240CE92D00C8F55D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				659F29912446608400B78C44 /* AppKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

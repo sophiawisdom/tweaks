@@ -116,6 +116,12 @@ int main(int argc, char **argv) {
             NSLog(@"Got back result: %@", [proc get_windows]);
         } else if ([mainInput isEqualToString:@"get_ivars"]) {
             NSLog(@"Ivars are: %@", [proc get_ivars:[words objectAtIndex:1]]);
+        } else if ([mainInput isEqualToString:@"get_image_for_class"]) {
+            NSLog(@"image is: %@", [proc get_image_for_class:[words objectAtIndex:1]]);
+        } else if ([mainInput isEqualToString:@"draw_layers"]) {
+            NSLog(@"Starting to draw layers. this will take a while.");
+            [proc draw_layers];
+            NSLog(@"Done drawing layers");
         } else {
             printf("Unknown command\n");
             continue;

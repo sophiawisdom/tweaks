@@ -9,6 +9,8 @@
 #include <stdio.h>
 #import <Foundation/Foundation.h>
 
+@class CALayer;
+
 /**
  * This file is bound to the Process API. It represents bindings between the Process API and <objc/runtime.h>
  */
@@ -41,6 +43,11 @@ NSString *replace_methods(NSArray<NSDictionary<NSString *, id> *> *switches);
 
 NSArray<NSDictionary *> * get_properties_for_class(NSString *className);
 
-NSString *print_windows(void);
+NSArray<NSString *> *get_layer_images(void);
+NSArray<CALayer *> *get_layers(void);
 
 NSArray<NSArray<id> *> *getIvars(NSString *class);
+
+NSString *get_image_for_class(NSString *class);
+
+NSData * draw_layers(void);

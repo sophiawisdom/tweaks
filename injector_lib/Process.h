@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches;
 - (NSString *)get_windows;
 - (NSArray<NSArray *> *)get_ivars:(NSString *)cls;
+- (NSString *)get_image_for_class:(NSString *)cls;
+- (void)draw_layers;
 
 @end
 
