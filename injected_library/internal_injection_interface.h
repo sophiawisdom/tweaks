@@ -9,6 +9,10 @@
 #ifndef injected_library_h
 #define injected_library_h
 
+// Something to keep in mind is that if this links anything, those things have to be in /usr/lib/injected because otherwise there
+// will be sandbox violations in sandboxed apps. injected_library and injector_lib are already set up to look in /usr/lib/injected
+// for libraries, so that should be all you have to add.
+
 // Defined more in objc_runtime_getters.h
 typedef enum {
     NO_COMMAND,
@@ -23,8 +27,7 @@ typedef enum {
     GET_WINDOWS,
     GET_IVARS,
     GET_IMAGE_FOR_CLASS,
-    GET_LAYER_IMAGES,
-    DRAW_LAYERS
+    GET_LAYERS
 } command_type;
 
 
@@ -37,7 +40,12 @@ typedef enum {
 // Once this is set, the target process' response has completed
 #define NEW_OUT_DATA 0x87654321
 
+// TODO: consider changing this to be randomly generated per shared_inj build
 #define SEM_PORT_NAME 0x83452 // Randomly generated port name. This will be how the target task can access the semaphore
+
+// Full 4GB, so it's large enough for full TIFF layer outputs.
+// No real cost to making it larger - memory won't be used unless we write to it.
+#define MAP_SIZE 0x100000000
 
 // First bytes of output shmem will be this.
 typedef struct data_out {
@@ -54,9 +62,5 @@ typedef struct command_in {
 } command_in;
 
 extern uint64_t shmem_loc; // Shared memory address in target process. The correct value of this will be injected by the host process.
-
-// First 8 bytes are for the data indicator
-// 0 until there is a new command, whereupon it is set to not-0.
-// When the command has been processed, set back to 0 again.
 
 #endif /* injected_library_h */

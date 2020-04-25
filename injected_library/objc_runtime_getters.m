@@ -18,6 +18,8 @@
 #import <dlfcn.h>
 #import <CoreGraphics/CoreGraphics.h>
 
+#import "SerializedLayerTree.h"
+
 // The reason why it's structured like this, with multiple levels to get down
 // to a particular selector, is because for applications that link a lot of frameworks
 // the raw size of all the data can take significant amounts of time to extract and
@@ -238,31 +240,20 @@ NSArray<NSView *> *spiderView(NSView *view) {
     return views;
 }
 
-NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
-    return [[NSBitmapImageRep alloc]
-     initWithBitmapDataPlanes:NULL
-     pixelsWide:size.width
-     pixelsHigh:size.height
-     bitsPerSample:8
-     samplesPerPixel:4 // with alpha this needs to be 4
-     hasAlpha:YES
-     isPlanar:NO
-     colorSpaceName:NSDeviceRGBColorSpace
-     bytesPerRow:0
-     bitsPerPixel:0];
-}
-
+// if this become bottleneck, you could pass a single NSMutableArray reference throughout
 NSArray<CALayer *> *spider_layers(CALayer *layer) {
     NSMutableArray<CALayer *> *layers = [[NSMutableArray alloc] initWithArray:@[layer]];
-    for (CALayer *subLayer in [layer sublayers]) {
+    NSArray<CALayer *> *sublayers = layer.sublayers;
+    for (unsigned int i = 0; i < sublayers.count; i++) {
+        CALayer *subLayer = [sublayers objectAtIndex:i];
         [layers addObjectsFromArray:spider_layers(subLayer)];
     }
     return layers;
 }
 
-NSWindow *get_main_window() {
+CALayer *get_main_layer() {
     NSApplication *app = [NSApplication sharedApplication];
-    return [[app windows] firstObject]; // [app mainWindow] and [app keyWindow] are often null
+    return app.windows.firstObject.contentView.superview.layer; // [app mainWindow] and [app keyWindow] are often null
 }
 
 NSArray<NSString *> *get_layer_images() {
@@ -275,96 +266,14 @@ NSArray<NSString *> *get_layer_images() {
 }
 
 NSArray<CALayer *> *get_layers() {
-    return spider_layers([[[get_main_window() contentView] superview] layer]);
+    return spider_layers(get_main_layer());
 }
 
-// Takes a while
-NSData * draw_layers() {
-    NSArray<CALayer *> * layers = get_layers();
-    
-    NSMutableArray<NSBitmapImageRep *> *reps = [[NSMutableArray alloc] init];
-    
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
-    
+SerializedLayerTree *get_serialized_layers() {
     [NSGraphicsContext saveGraphicsState];
-    
-    for (CALayer *layer in layers) {
-        NSSize frameSize = [layer frame].size;
-        if (frameSize.width * frameSize.height == 0) {
-            continue;
-        }
-        
-        // in a sane world, we would be using [NSView cacheDisplayInRect:toBitmapImageRep:]
-        // However, that calls (through a sequence of things) -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]
-        // and because we are not on the main thread we cannot do UI work (like layout subtrees).
-
-                                
-        os_log(logger, "width is %f, height is %f", frameSize.width, frameSize.height);
-        NSBitmapImageRep *rep = emptyImageForDrawing(frameSize);
-        os_log(logger, "created rep %{public}@", rep);
-        NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
-        os_log(logger, "graphics context is %{public}@", context);
-        [NSGraphicsContext setCurrentContext:context];
-        
-        /*
-         let transform = NSAffineTransform()
-         transform.translateX(by: flipHorizontally ? size.width : 0, yBy: flipVertically ? size.height : 0)
-         transform.scaleX(by: flipHorizontally ? -1 : 1, yBy: flipVertically ? -1 : 1)
-         transform.concat()
-         */
-        
-        NSAffineTransform *flipTransform = [[NSAffineTransform alloc] init];
-        [flipTransform translateXBy:frameSize.width yBy:0];
-        [flipTransform scaleXBy:-1 yBy:1];
-        [flipTransform concat];
-        [layer drawInContext:context.CGContext];
-        
-        [context flushGraphics];
-        [reps addObject:rep];
-
-        gettimeofday(&start, NULL);
-        
-        os_log(logger, "reps is about to add object %{public}@", rep);
-        [reps addObject:rep];
-        
-        /*
-        NSValue *packedPosition = (NSValue *)objc_getAssociatedObject([view superview], 691214);
-        CGPoint pos;
-        [packedPosition getValue:&pos];
-        
-        CGRect viewRect = [view frame];
-        viewRect.origin = (CGPoint){.x = viewRect.origin.x + pos.x, .y = viewRect.origin.y + pos.y};
-        float scale = [[view layer] contentsScale];
-        viewRect.origin = (CGPoint){.x = viewRect.origin.x*[[view layer] contentsScale], .y=viewRect.origin.y*[[view layer] contentsScale]};
-        viewRect.size = (CGSize){.width=viewRect.size.width *[[view layer] contentsScale], .height=viewRect.size.height*[[view layer] contentsScale]};
-        
-        [rects addObject:[NSValue valueWithRect:viewRect]];
-                    
-        os_log(logger, "[[view layer] class] is %{public}@", [[view layer] class]);
-         */
-        // [view layer].backgroundColor = CGColorCreateGenericRGB(1, 0, 0, 1);
-         
-        /*
-        if ([view isKindOfClass:[NSTextField class]]) {
-            NSTextField *control = (NSTextField *)view;
-            [control setStringValue:@"penis"];
-          // running twice causes crash, i think because it tries to deallocate a constant string?
-        }*/
-    }
-    
+    SerializedLayerTree *tree = [[SerializedLayerTree alloc] initWithLayer:get_main_layer()];
     [NSGraphicsContext restoreGraphicsState];
-    
-    gettimeofday(&end, NULL);
-    float diff = (end.tv_usec - start.tv_usec) + ((end.tv_sec - start.tv_sec)*1000000);
-    diff /= 1000000;
-    os_log(logger, "Took %f seconds to get all reps", diff);
-    
-    // NSData *dat = [NSBitmapImageRep representationOfImageRepsInArray:reps usingType:NSBitmapImageFileTypeTIFF properties:nil];
-    os_log(logger, "Getting tiff representation");
-    NSData *dat = [NSBitmapImageRep TIFFRepresentationOfImageRepsInArray:reps usingCompression:NSTIFFCompressionLZW factor:2];
-    os_log(logger, "got tiff representation %@", dat);
-    return dat;
+    return tree;
 }
 
 NSArray<NSArray<id> *> *getIvars(NSString *class) {

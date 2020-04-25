@@ -10,9 +10,11 @@
 #import "Process.h"
 #include "macho_parser.h"
 #include "inject.h"
-#include "internal_injection_interface.h"
+#import "internal_injection_interface.h"
 #include "symbol_locator.h"
 #include <dlfcn.h>
+
+#import "SerializedLayerTree.h"
 
 #include <mach-o/dyld_images.h>
 
@@ -26,10 +28,6 @@ char *shmem_symbol = "_shmem_loc";
 printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
 return nil;\
 }
-
-#define MAP_SIZE 0x10000000
-// 256 MB, because the serialized return data can get big. For activity monitor, ~20MB
-// Also the memory won't be used unless we write to it.
 
 const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 
@@ -69,9 +67,9 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     
     MACH_CALL(semaphore_create(mach_task_self(), &_sem, SYNC_POLICY_FIFO, 0));
     kr = mach_port_insert_right(_remoteTask,
-                           SEM_PORT_NAME, // Randomly generated port name. This will be how the target task can access the semaphore
+                           SEM_PORT_NAME, // Static port name (in header). This will be how the target task can access the semaphore.
                                           // In theory this could collide with an existing one but in practice this is unlikely.
-                           _sem, //
+                           _sem,
                            MACH_MSG_TYPE_COPY_SEND); // Semaphores give a send right (b/c receive in kernel)
 
     if (kr == KERN_NAME_EXISTS) { // "name exists" i.e. we have already injected into this process
@@ -153,28 +151,33 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     return self;
 }
 
+#define ARG_OFFSET 0x1000
+
 // WARNING: data returned from this function will be overwritten when this is called again!
 // If you wish it to be preserved, copy the NSData.
 - (NSData *)sendCommand:(command_type)cmd withArg:(id)arg {
     NSError *err = nil;
-    NSData *serializedData = [NSKeyedArchiver archivedDataWithRootObject:arg ?: @"" requiringSecureCoding:false error:&err];
+    NSData *serializedData = arg ? [NSKeyedArchiver archivedDataWithRootObject:arg requiringSecureCoding:false error:&err] : nil;
     if (err) {
         NSLog(@"Encountered error while serializing data: %@", err);
         return nil;
     }
     
     // Copy passed arg into the shared memory buffer so the foreign process can access it
-    if ((MAP_SIZE - [serializedData length]) < 0x10000) {
+    if ((MAP_SIZE - [serializedData length]) < ARG_OFFSET) {
         fprintf(stderr, "Passed command of size %lu, which is too large\n", [serializedData length]);
         return nil;
     }
-    // We use this trick also on the output. Instead of a physical copy, just use VM tricks.
-    // To be honest this is only more efficient on larger copies, but it's a fun trick IMO
-    MACH_CALL(mach_vm_copy(mach_task_self(), (mach_vm_address_t)[serializedData bytes], [serializedData length], _localShmemAddress+0x1000)); // generous padding
+    
+    if (serializedData) {
+        // We use this trick also on the output. Instead of a physical copy, just use VM tricks.
+        // To be honest this is only more efficient on larger copies, but it's a fun trick IMO
+        MACH_CALL(mach_vm_copy(mach_task_self(), (mach_vm_address_t)[serializedData bytes], [serializedData length], _localShmemAddress+ARG_OFFSET));
+    }
     
     command_in *command = (command_in *)_localShmemAddress;
     command -> cmd = cmd;
-    command -> arg = (data_out){.shmem_offset=0x1000, .len=[serializedData length]};
+    command -> arg = (data_out){.shmem_offset=ARG_OFFSET, .len=[serializedData length]};
     
     // Should be -1 here because injected_library should be waiting
     struct timeval wakeup;
@@ -368,6 +371,7 @@ NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
      bitsPerPixel:0];
 }
 
+/*
 - (NSString *)get_windows {
     NSData *layerImagesData = [self sendCommand:GET_LAYER_IMAGES withArg:nil];
     if (!layerImagesData) {
@@ -410,43 +414,10 @@ NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
     // b) the NSSecureCoding implementation is defined in a category in another library.
     NSArray<CALayer *> *layers = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:resp error:&err];
     // NSArray<CALayer *> *layers = [NSKeyedUnarchiver unarchivedObjectOfClasses:archiveClasses fromData:resp error:&err];
-    /*
     if (err) {
-        NSLog(@"Encountered error in deserializing response dictionary: %@. info is %@", err, [err userInfo]);
-        NSString *debugDescription = [[err userInfo] objectForKey:NSDebugDescriptionErrorKey];
-        NSError *regexErr = nil;
-        NSRegularExpression *regex = [[NSRegularExpression alloc] initWithPattern:@"\"(.*?)\"" options:0 error:&regexErr];
-        if (regexErr) {
-            NSLog(@"Got regular expression error %@", regexErr);
-            return nil;
-        }
-        NSRange rng = [regex rangeOfFirstMatchInString:debugDescription options:0 range:NSMakeRange(0, [debugDescription length])];
-        NSLog(@"Range starts at %d length %d", rng.location, rng.length);
-        if (NSEqualRanges(rng, NSMakeRange(NSNotFound, 0))) {
-            NSLog(@"Unable to find class causing CALayer error");
-            return nil;
-        }
-        NSString *classCausingError = [debugDescription substringWithRange:rng];
-        classCausingError = [classCausingError stringByReplacingOccurrencesOfString:@"\"" withString:@""];
-        NSLog(@"Class causing error is \"%@\"", classCausingError);
-        NSString *imageContainingClass = [self get_image_for_class:classCausingError];
-        NSLog(@"image containg class is %@", imageContainingClass);
-        void *handle = dlopen([imageContainingClass UTF8String], RTLD_LAZY);
-        NSLog(@"Handle is %p, error is %s", handle, dlerror());
-        
-        // so we can free them later. for now we want to keep them open because if get_windows
-        // is called again we don't want to reopen all the dylibs.
-        [_dlopen_handles addObject:[[NSNumber alloc] initWithUnsignedLongLong:handle]];
-        
-        err = nil;
-    }*/
-    
-    if (err) {
-        NSLog(@"Continue to have error: %@", err);
+        NSLog(@"Unable to deserialize CALayers: %@", err);
         return nil;
     }
-    
-    NSLog(@"Layers are %@, err is %@", layers, err);
     
     [NSGraphicsContext saveGraphicsState];
     
@@ -503,6 +474,7 @@ NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
     
     return handle;
 }
+ */
 
 - (NSArray<NSArray *> *)get_ivars:(NSString *)class {
     NSData *resp = [self sendCommand:GET_IVARS withArg:class];
@@ -537,10 +509,47 @@ NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
     return image;
 }
 
+/*
 - (void)draw_layers {
-    NSData *resp = [self sendCommand:DRAW_LAYERS withArg:nil];
+    NSData *resp = [self sendCommand:GET_LAYERS withArg:nil];
+    
+    [resp writeToFile:@"/users/sophiawisdom/tweaks/layers.tiff" atomically:YES];
+        
+    NSArray<NSBitmapImageRep *> *reps = [NSBitmapImageRep imageRepsWithData:resp];
+    int iteration = 0;
+    for (NSBitmapImageRep *rep in reps) {
+        NSString *name = [NSString stringWithFormat:@"/users/sophiawisdom/tweaks/images/layer_%d.png", iteration++];
+        [[rep representationUsingType:NSBitmapImageFileTypePNG properties:nil] writeToFile:name atomically:false];
+    }
     NSLog(@"Got response back %@", resp);
-    [resp writeToFile:@"/users/sophiawisdom/tweaks/layers.tiff" atomically:NO];
+}
+ */
+
+- (void)draw_layers {
+    NSData *resp = [self sendCommand:GET_LAYERS withArg:nil];
+    if (!resp) {
+        NSLog(@"Got null resp %@", resp);
+        return;
+    }
+    
+    NSError *err = nil;
+    SerializedLayerTree *layerTree = [NSKeyedUnarchiver unarchivedObjectOfClass:[SerializedLayerTree class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return;
+    }
+    
+    [NSGraphicsContext saveGraphicsState];
+    
+    NSBitmapImageRep *img = emptyImageForDrawing(layerTree.rect.size);
+    NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:img];
+    [NSGraphicsContext setCurrentContext:context];
+    [layerTree renderAtPoint:CGPointMake(0, 0)];
+    // [layerTree renderInRect:CGRectMake(0, 0, 0, 0)];
+    [context flushGraphics];
+    [[img TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:2] writeToFile:@"/users/sophiawisdom/tweaks/layerTree.tiff" atomically:false];
+    
+    [NSGraphicsContext restoreGraphicsState];
 }
 
 // In dealloc() we need to communicate to the injected library to exit

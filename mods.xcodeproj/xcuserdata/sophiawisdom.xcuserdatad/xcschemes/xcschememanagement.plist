@@ -37,12 +37,17 @@
 		<key>injector_lib.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>5</integer>
+			<integer>6</integer>
 		</dict>
 		<key>macho-parser.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>2</integer>
+		</dict>
+		<key>shared_lib.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>5</integer>
 		</dict>
 		<key>tweaks.xcscheme_^#shared#^_</key>
 		<dict>
@@ -128,6 +133,16 @@
 			<true/>
 		</dict>
 		<key>6548204A2435412500DE052B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>65C0AA2F244C7D160038202B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>65C0AA4A244D1F780038202B</key>
 		<dict>
 			<key>primary</key>
 			<true/>

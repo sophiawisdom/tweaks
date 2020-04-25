@@ -8,11 +8,6 @@
 
 #import "macho_parser.h"
 
-#define MACH_CALL(kret) if (kret != 0) {\
-printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
-exit(1);\
-}
-
 // TODO: mount -uw / + killall Finder every time the app launches so we can create "usr/lib/injection" and put all our stuff there
 // Be clear that the reason why is to get around potential sandboxing issues, especially prevalent with platform binaries.
 // Also add a mention in the README that SIP is required to be disabled.

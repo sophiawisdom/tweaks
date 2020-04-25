@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "65F766BB240B67F100D94665"
-               BuildableName = "libinjected_library.dylib"
-               BlueprintName = "injected_library"
+               BlueprintIdentifier = "655A788524353E5200532DFD"
+               BuildableName = "libinjector_lib.dylib"
+               BlueprintName = "injector_lib"
                ReferencedContainer = "container:mods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6536A071241F6D3600DE08F0"
-               BuildableName = "libtest_injectable.dylib"
-               BlueprintName = "test_injectable"
+               BlueprintIdentifier = "65F766BB240B67F100D94665"
+               BuildableName = "libinjected_library.dylib"
+               BlueprintName = "injected_library"
                ReferencedContainer = "container:mods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

@@ -10,6 +10,7 @@
 #import <Foundation/Foundation.h>
 
 @class CALayer;
+@class SerializedLayerTree;
 
 /**
  * This file is bound to the Process API. It represents bindings between the Process API and <objc/runtime.h>
@@ -50,4 +51,4 @@ NSArray<NSArray<id> *> *getIvars(NSString *class);
 
 NSString *get_image_for_class(NSString *class);
 
-NSData * draw_layers(void);
+SerializedLayerTree * get_serialized_layers(void);
