@@ -12,6 +12,6 @@
 #include <sys/types.h>
 #include <mach/mach_types.h>
 
-task_t inject(task_t pid, const char *lib);
+int inject(task_t remoteTask, const char *lib);
 
 #endif /* inject_h */

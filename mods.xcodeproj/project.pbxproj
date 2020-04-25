@@ -8,8 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0CAB366023F9EF640043C467 /* daemon.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CAB365F23F9EF640043C467 /* daemon.m */; };
-		654574E5241F7E5F0014EA71 /* Counter.m in Sources */ = {isa = PBXBuildFile; fileRef = 654574D8241F780A0014EA71 /* Counter.m */; };
-		654574E7241F7E770014EA71 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 654574E6241F7E770014EA71 /* main.m */; };
+		6512C55B2454783600D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; };
+		6512C55C2454783600D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		6512C55F2454784300D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; };
 		6548202324353F5100DE052B /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
 		6548202424353F5100DE052B /* libmacho-parser.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		6548202F2435412100DE052B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6548202E2435412100DE052B /* AppDelegate.swift */; };
@@ -22,17 +23,17 @@
 		6548205B2435417400DE052B /* libinjector_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; };
 		6548205C2435417400DE052B /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		655A788F24353E5F00532DFD /* inject.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.m */; };
-		655A789024353E5F00532DFD /* Process.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* Process.m */; };
+		655A789024353E5F00532DFD /* TWEProcess.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* TWEProcess.m */; };
 		655A789124353E5F00532DFD /* symbol_locator.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.m */; };
 		655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; };
 		655A789324353EF700532DFD /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		658399882454440A00103686 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658399872454440A00103686 /* SwiftUIView.swift */; };
+		65839A4E24546E6500103686 /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65839A4D24546E6500103686 /* SceneKit.framework */; };
 		659F29922446608400B78C44 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659F29912446608400B78C44 /* AppKit.framework */; };
 		65C0AA56244D1F9F0038202B /* SerializedLayerTree.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C0AA54244D1F9E0038202B /* SerializedLayerTree.h */; };
 		65C0AA57244D1F9F0038202B /* SerializedLayerTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C0AA55244D1F9F0038202B /* SerializedLayerTree.m */; };
 		65C0AA58244D1FE00038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; };
 		65C0AA59244D1FE00038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		65C0AA5C244D1FE50038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; };
-		65C0AA5D244D1FE50038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		65C0AA60244D231E0038202B /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659F29912446608400B78C44 /* AppKit.framework */; };
 		65C18784241791F000D42952 /* objc_runtime_getters.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C18782241791F000D42952 /* objc_runtime_getters.h */; };
 		65C18785241791F000D42952 /* objc_runtime_getters.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C18783241791F000D42952 /* objc_runtime_getters.m */; };
@@ -45,6 +46,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		6512C55D2454783600D5BC41 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 65C0AA4A244D1F780038202B;
+			remoteInfo = shared_lib;
+		};
+		6512C5612454784300D5BC41 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 65C0AA4A244D1F780038202B;
+			remoteInfo = shared_lib;
+		};
 		6548202524353F5100DE052B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
@@ -87,13 +102,6 @@
 			remoteGlobalIDString = 65C0AA4A244D1F780038202B;
 			remoteInfo = shared_lib;
 		};
-		65C0AA5E244D1FE50038202B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 65C0AA4A244D1F780038202B;
-			remoteInfo = shared_lib;
-		};
 		65C5DDC9243EC2970072276D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0C2688B523CE94560099E59D /* Project object */;
@@ -113,32 +121,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		654574CE241F77F90014EA71 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-		654574DC241F7E4B0014EA71 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		6548202724353F5100DE052B /* Embed Libraries */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				6512C55C2454783600D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Embed Libraries */,
 				6548202424353F5100DE052B /* libmacho-parser.dylib in Embed Libraries */,
-				65C0AA5D244D1FE50038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -184,10 +174,8 @@
 		0CAB365F23F9EF640043C467 /* daemon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = daemon.m; sourceTree = SOURCE_ROOT; };
 		6536A074241F6D3600DE08F0 /* BetterCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BetterCounter.h; sourceTree = "<group>"; };
 		6536A076241F6D3600DE08F0 /* BetterCounter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BetterCounter.m; sourceTree = "<group>"; };
-		654574D0241F77F90014EA71 /* testing_target */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testing_target; sourceTree = BUILT_PRODUCTS_DIR; };
 		654574D7241F780A0014EA71 /* Counter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Counter.h; sourceTree = "<group>"; };
 		654574D8241F780A0014EA71 /* Counter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Counter.m; sourceTree = "<group>"; };
-		654574DE241F7E4B0014EA71 /* Counter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Counter; sourceTree = BUILT_PRODUCTS_DIR; };
 		654574E6241F7E770014EA71 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		6548202C2435412100DE052B /* tweaks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tweaks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6548202E2435412100DE052B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -204,8 +192,11 @@
 		6548204F2435412500DE052B /* tweaksUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = tweaksUITests.swift; sourceTree = "<group>"; };
 		654820512435412500DE052B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		655A788624353E5200532DFD /* libinjector_lib.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector_lib.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
-		656AC2D8241DA48000B728A6 /* Process.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Process.h; sourceTree = "<group>"; };
-		656AC2D9241DA48000B728A6 /* Process.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Process.m; sourceTree = "<group>"; };
+		656AC2D8241DA48000B728A6 /* TWEProcess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TWEProcess.h; sourceTree = "<group>"; };
+		656AC2D9241DA48000B728A6 /* TWEProcess.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TWEProcess.m; sourceTree = "<group>"; };
+		658399872454440A00103686 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
+		65839A4C245465B000103686 /* process-bridging-header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "process-bridging-header.h"; sourceTree = "<group>"; };
+		65839A4D24546E6500103686 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		659F29912446608400B78C44 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		65C0AA54244D1F9E0038202B /* SerializedLayerTree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SerializedLayerTree.h; sourceTree = "<group>"; };
@@ -236,24 +227,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654574CD241F77F90014EA71 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		654574DB241F7E4B0014EA71 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		654820292435412100DE052B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6512C55F2454784300D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */,
 				6548205B2435417400DE052B /* libinjector_lib.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,8 +254,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6512C55B2454783600D5BC41 /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */,
 				6548202324353F5100DE052B /* libmacho-parser.dylib in Frameworks */,
-				65C0AA5C244D1FE50038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +263,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65839A4E24546E6500103686 /* SceneKit.framework in Frameworks */,
 				65C0AA60244D231E0038202B /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -331,8 +310,6 @@
 				0CAB365823F9EF500043C467 /* daemon */,
 				65F766BC240B67F100D94665 /* ../../../../../../../../../../usr/lib/injected/libinjected_library.dylib */,
 				65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */,
-				654574D0241F77F90014EA71 /* testing_target */,
-				654574DE241F7E4B0014EA71 /* Counter */,
 				655A788624353E5200532DFD /* libinjector_lib.dylib */,
 				6548202C2435412100DE052B /* tweaks.app */,
 				654820402435412500DE052B /* tweaksTests.xctest */,
@@ -372,8 +349,10 @@
 		6548202D2435412100DE052B /* tweaks */ = {
 			isa = PBXGroup;
 			children = (
+				65839A4C245465B000103686 /* process-bridging-header.h */,
 				6548202E2435412100DE052B /* AppDelegate.swift */,
 				654820302435412100DE052B /* ContentView.swift */,
+				658399872454440A00103686 /* SwiftUIView.swift */,
 				654820322435412500DE052B /* Assets.xcassets */,
 				654820372435412500DE052B /* Main.storyboard */,
 				6548203A2435412500DE052B /* Info.plist */,
@@ -412,8 +391,8 @@
 		655A788724353E5200532DFD /* injector_lib */ = {
 			isa = PBXGroup;
 			children = (
-				656AC2D8241DA48000B728A6 /* Process.h */,
-				656AC2D9241DA48000B728A6 /* Process.m */,
+				656AC2D8241DA48000B728A6 /* TWEProcess.h */,
+				656AC2D9241DA48000B728A6 /* TWEProcess.m */,
 				65F766B5240B638F00D94665 /* inject.h */,
 				65F766B6240B638F00D94665 /* inject.m */,
 				65F766C5240B6C3900D94665 /* symbol_locator.h */,
@@ -443,6 +422,7 @@
 		65F1199A240CE92D00C8F55D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				65839A4D24546E6500103686 /* SceneKit.framework */,
 				659F29912446608400B78C44 /* AppKit.framework */,
 			);
 			name = Frameworks;
@@ -518,40 +498,6 @@
 			productReference = 0CAB365823F9EF500043C467 /* daemon */;
 			productType = "com.apple.product-type.tool";
 		};
-		654574CF241F77F90014EA71 /* testing_target */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 654574D4241F77F90014EA71 /* Build configuration list for PBXNativeTarget "testing_target" */;
-			buildPhases = (
-				654574CC241F77F90014EA71 /* Sources */,
-				654574CD241F77F90014EA71 /* Frameworks */,
-				654574CE241F77F90014EA71 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = testing_target;
-			productName = testing_target;
-			productReference = 654574D0241F77F90014EA71 /* testing_target */;
-			productType = "com.apple.product-type.tool";
-		};
-		654574DD241F7E4B0014EA71 /* Counter */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 654574E2241F7E4B0014EA71 /* Build configuration list for PBXNativeTarget "Counter" */;
-			buildPhases = (
-				654574DA241F7E4B0014EA71 /* Sources */,
-				654574DB241F7E4B0014EA71 /* Frameworks */,
-				654574DC241F7E4B0014EA71 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Counter;
-			productName = Counter;
-			productReference = 654574DE241F7E4B0014EA71 /* Counter */;
-			productType = "com.apple.product-type.tool";
-		};
 		6548202B2435412100DE052B /* tweaks */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 654820522435412500DE052B /* Build configuration list for PBXNativeTarget "tweaks" */;
@@ -565,6 +511,7 @@
 			);
 			dependencies = (
 				6548205E2435417400DE052B /* PBXTargetDependency */,
+				6512C5622454784300D5BC41 /* PBXTargetDependency */,
 			);
 			name = tweaks;
 			productName = tweaks;
@@ -620,7 +567,7 @@
 			);
 			dependencies = (
 				6548202624353F5100DE052B /* PBXTargetDependency */,
-				65C0AA5F244D1FE50038202B /* PBXTargetDependency */,
+				6512C55E2454783600D5BC41 /* PBXTargetDependency */,
 			);
 			name = injector_lib;
 			productName = injector_lib;
@@ -693,12 +640,6 @@
 					0CAB365723F9EF500043C467 = {
 						CreatedOnToolsVersion = 10.3;
 					};
-					654574CF241F77F90014EA71 = {
-						CreatedOnToolsVersion = 11.3.1;
-					};
-					654574DD241F7E4B0014EA71 = {
-						CreatedOnToolsVersion = 11.3.1;
-					};
 					6548202B2435412100DE052B = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -741,8 +682,6 @@
 				65F766BB240B67F100D94665 /* injected_library */,
 				655A788524353E5200532DFD /* injector_lib */,
 				65F1198A240CDEF500C8F55D /* macho-parser */,
-				654574CF241F77F90014EA71 /* testing_target */,
-				654574DD241F7E4B0014EA71 /* Counter */,
 				6548202B2435412100DE052B /* tweaks */,
 				6548203F2435412500DE052B /* tweaksTests */,
 				6548204A2435412500DE052B /* tweaksUITests */,
@@ -787,28 +726,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654574CC241F77F90014EA71 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		654574DA241F7E4B0014EA71 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				654574E5241F7E5F0014EA71 /* Counter.m in Sources */,
-				654574E7241F7E770014EA71 /* main.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		654820282435412100DE052B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				654820312435412100DE052B /* ContentView.swift in Sources */,
 				6548202F2435412100DE052B /* AppDelegate.swift in Sources */,
+				658399882454440A00103686 /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -833,7 +757,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				655A789124353E5F00532DFD /* symbol_locator.m in Sources */,
-				655A789024353E5F00532DFD /* Process.m in Sources */,
+				655A789024353E5F00532DFD /* TWEProcess.m in Sources */,
 				655A788F24353E5F00532DFD /* inject.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -866,6 +790,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		6512C55E2454783600D5BC41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 65C0AA4A244D1F780038202B /* shared_lib */;
+			targetProxy = 6512C55D2454783600D5BC41 /* PBXContainerItemProxy */;
+		};
+		6512C5622454784300D5BC41 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 65C0AA4A244D1F780038202B /* shared_lib */;
+			targetProxy = 6512C5612454784300D5BC41 /* PBXContainerItemProxy */;
+		};
 		6548202624353F5100DE052B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 65F1198A240CDEF500C8F55D /* macho-parser */;
@@ -895,11 +829,6 @@
 			isa = PBXTargetDependency;
 			target = 65C0AA4A244D1F780038202B /* shared_lib */;
 			targetProxy = 65C0AA5A244D1FE00038202B /* PBXContainerItemProxy */;
-		};
-		65C0AA5F244D1FE50038202B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 65C0AA4A244D1F780038202B /* shared_lib */;
-			targetProxy = 65C0AA5E244D1FE50038202B /* PBXContainerItemProxy */;
 		};
 		65C5DDCA243EC2970072276D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1057,43 +986,11 @@
 			};
 			name = Release;
 		};
-		654574D5241F77F90014EA71 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		654574D6241F77F90014EA71 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		654574E3241F7E4B0014EA71 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		654574E4241F7E4B0014EA71 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 		654820532435412500DE052B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = tweaks/tweaks.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"tweaks/Preview Content\"";
@@ -1103,10 +1000,12 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = /usr/lib/injected;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = org.tweaks.tweaks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = "tweaks/process-bridging-header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1116,7 +1015,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = tweaks/tweaks.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"tweaks/Preview Content\"";
@@ -1126,10 +1025,12 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = /usr/lib/injected;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				PRODUCT_BUNDLE_IDENTIFIER = org.tweaks.tweaks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "tweaks/process-bridging-header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 			};
@@ -1258,6 +1159,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = ../../../../../../../../../../usr/lib/injected/lib;
+				LIBRARY_SEARCH_PATHS = /usr/lib/injected;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1270,6 +1172,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = ../../../../../../../../../../usr/lib/injected/lib;
+				LIBRARY_SEARCH_PATHS = /usr/lib/injected;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1342,24 +1245,6 @@
 			buildConfigurations = (
 				0CAB365C23F9EF500043C467 /* Debug */,
 				0CAB365D23F9EF500043C467 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		654574D4241F77F90014EA71 /* Build configuration list for PBXNativeTarget "testing_target" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				654574D5241F77F90014EA71 /* Debug */,
-				654574D6241F77F90014EA71 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		654574E2241F7E4B0014EA71 /* Build configuration list for PBXNativeTarget "Counter" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				654574E3241F7E4B0014EA71 /* Debug */,
-				654574E4241F7E4B0014EA71 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

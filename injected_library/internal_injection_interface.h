@@ -45,7 +45,7 @@ typedef enum {
 
 // Full 4GB, so it's large enough for full TIFF layer outputs.
 // No real cost to making it larger - memory won't be used unless we write to it.
-#define MAP_SIZE 0x100000000
+#define MAP_SIZE 0x10000000
 
 // First bytes of output shmem will be this.
 typedef struct data_out {

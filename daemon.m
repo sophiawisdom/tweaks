@@ -4,7 +4,7 @@
 #import <Foundation/Foundation.h>
 #import <os/log.h>
 
-#import "Process.h"
+#import "TWEProcess.h"
 
 #import "macho_parser.h"
 
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     
     printf("Injecting into PID %d\n", pid);
     
-    Process *proc = [[Process alloc] initWithPid:pid];
+    TWEProcess *proc = [[TWEProcess alloc] initWithPid:pid];
     
     if (proc == nil) {
         printf("Got back error for process\n");
@@ -107,8 +107,6 @@ int main(int argc, char **argv) {
                 @"selectors": selectors
             };
             NSLog(@"Got back result: %@", [proc replace_methods:@[switc]]);
-        } else if ([mainInput isEqualToString:@"get_windows"]) {
-            NSLog(@"Got back result: %@", [proc get_windows]);
         } else if ([mainInput isEqualToString:@"get_ivars"]) {
             NSLog(@"Ivars are: %@", [proc get_ivars:[words objectAtIndex:1]]);
         } else if ([mainInput isEqualToString:@"get_image_for_class"]) {

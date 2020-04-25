@@ -7,17 +7,20 @@
 //
 
 import SwiftUI
+import Combine
+
 
 struct ContentView: View {
+    let tree: SerializedLayerTree?
+    
     var body: some View {
-        Text("Hello, universey!")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ScenekitView(tree: tree)
     }
 }
 
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView(tree: nil)
     }
 }

@@ -12,6 +12,8 @@
 
 #import <AppKit/AppKit.h>
 
+#import <SceneKit/SceneKit.h>
+
 NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
     return [[NSBitmapImageRep alloc]
      initWithBitmapDataPlanes:NULL
@@ -50,6 +52,7 @@ os_log_t logger;
         _layer = layer;
         _img = [self _drawLayer];
         _rect = [layer frame];
+        self.viewName = NSStringFromClass([[layer delegate] class]);
         NSMutableArray<SerializedLayerTree *> *sublayers = [[NSMutableArray alloc] init];
         for (CALayer *sublayer in layer.sublayers) {
             if ([self _isOkLayer:sublayer]) {
@@ -122,6 +125,17 @@ os_log_t logger;
     }
 }
 
+- (SCNNode *)node {
+    SCNNode *n = [SCNNode nodeWithGeometry:[SCNPlane planeWithWidth:_rect.size.width height:_rect.size.height]];
+    n.position = SCNVector3Make(_rect.origin.x, _rect.origin.y, 5);
+    n.geometry.firstMaterial.diffuse.contents = [[NSImage alloc] initWithCGImage:_img.CGImage size:_img.size];
+    n.name = self.viewName;
+    for (SerializedLayerTree *subtree in _sublayers) {
+        [n addChildNode:[subtree node]];
+    }
+    return n;
+}
+
 #pragma mark <NSSecureCoding> conformance
 
 + (BOOL)supportsSecureCoding {
@@ -135,6 +149,7 @@ os_log_t logger;
         NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [SerializedLayerTree class]]];
         self.sublayers = [coder decodeObjectOfClasses:classes forKey:@"sublayers"];
         self.rect = [coder decodeRectForKey:@"rect"];
+        self.viewName = [coder decodeObjectOfClass:[NSString class] forKey:@"viewName"];
     }
     return self;
 }
@@ -143,6 +158,7 @@ os_log_t logger;
     [coder encodeObject:[self.img TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:2] forKey:@"img"];
     [coder encodeObject:self.sublayers forKey:@"sublayers"];
     [coder encodeRect:self.rect forKey:@"rect"];
+    [coder encodeObject:self.viewName forKey:@"viewName"];
 }
 
 @end

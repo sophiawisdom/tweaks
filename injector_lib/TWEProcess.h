@@ -10,10 +10,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Process : NSObject
+@class SerializedLayerTree;
+
+@interface TWEProcess : NSObject
 
 //
-- (instancetype)initWithPid:(pid_t)pid;
+- (nullable instancetype)initWithPid:(pid_t)pid;
 
 // For everything that takes a class parameter as a string, nil will be returned if the class can't be found.
 // TODO: better error handling
@@ -48,9 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 // This replaces all the methods
 - (NSString *)replace_methods:(NSArray<NSDictionary<NSString *, id> *> *)switches;
 
-//
-- (NSString *)get_windows;
-
 // This gets all the ivars on the class. This is basically a binding for class_copyIvarList.
 - (NSArray<NSArray *> *)get_ivars:(NSString *)cls;
 
@@ -60,6 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
 // This draws the entire UI in the target process and then sends it over. This is very slow and inefficient
 //
 - (void)draw_layers;
+
+- (nullable SerializedLayerTree *)get_layers;
 
 @end
 

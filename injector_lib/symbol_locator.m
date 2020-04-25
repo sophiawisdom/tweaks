@@ -130,6 +130,8 @@ mach_vm_address_t get_dylib_address(task_t task, char *dylib) {
     return addr;
 }
 
+// This will only function correctly if DYLD_LIBRARY_PATH is set to
+// /Users/sophiawisdom/Library/Developer/Xcode/DerivedData/mods-hiqpvfikerrvwrbgoskpjqwmglif/Build/Products/Debug:/usr/lib/system
 mach_vm_address_t get_symbol(struct dyld_image_info * dylibs, int size, char *dylib, char *symbol) {
     mach_vm_address_t dylib_address = find_dylib(dylibs, size, dylib);
     if (dylib_address == -1) {
@@ -138,5 +140,6 @@ mach_vm_address_t get_symbol(struct dyld_image_info * dylibs, int size, char *dy
     }
     
     long offset = get_symbol_offset(dylib, symbol);
+    printf("dylib_address was %p and offset was %ld for symbol %s and dylib %s\n", dylib_address, offset, symbol, dylib);
     return dylib_address + offset;
 }

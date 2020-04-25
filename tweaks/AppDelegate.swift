@@ -9,6 +9,18 @@
 import Cocoa
 import SwiftUI
 
+func getCalendarApp() -> NSRunningApplication? {
+    let apps = NSWorkspace.shared.runningApplications
+    // var calendarApp? = nil
+    for app in apps {
+        if app.bundleIdentifier == "com.apple.iCal" {
+            return app
+        }
+    }
+    
+    return nil
+}
+
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -16,8 +28,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        guard let calendar = getCalendarApp() else {
+            print("unable to find calendar app")
+            return
+        }
+        print("my pid is \(getpid())")
+        print("calendar is \(calendar), pid is \(calendar.processIdentifier)")
+        guard let proc = TWEProcess(pid: calendar.processIdentifier) else {
+            print("oh no, proc is nil!")
+            return
+        }
+        let tree = proc.get_layers()!
+        print("tree is \(tree)")
         // Create the SwiftUI view that provides the window contents.
-        let contentView = ContentView()
+        let contentView = ContentView(tree: tree)
 
         // Create the window and set the content view. 
         window = NSWindow(

@@ -7,7 +7,7 @@
 //
 
 #import <sys/time.h>
-#import "Process.h"
+#import "TWEProcess.h"
 #include "macho_parser.h"
 #include "inject.h"
 #import "internal_injection_interface.h"
@@ -31,7 +31,7 @@ return nil;\
 
 const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 
-@implementation Process {
+@implementation TWEProcess {
     task_t _remoteTask; // task port
     uint64_t _localShmemAddress; // shmem address on our side
     uint64_t _remoteShmemAddress; // shmem address on other side
@@ -61,6 +61,9 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     
     mach_error_t kr = task_for_pid(mach_task_self(), pid, &_remoteTask);
     if (kr != KERN_SUCCESS) {
+        if (getuid() != 0) {
+            fprintf(stderr, "task_for_pid call failed (error %s) due to not running as root. euid is %d", mach_error_string(kr), getuid());
+        }
         fprintf(stderr, "Unable to call task_for_pid on pid %d: %s. Cannot continue!\n", pid, mach_error_string(kr));
         return nil;
     }
@@ -80,8 +83,8 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 
     kr = inject(_remoteTask, library);
     // From this point, the process is running
-    if (kr < 0) {
-        fprintf(stderr, "Encountered error with injection: %d\n", _remoteTask);
+    if (kr != 0) {
+        fprintf(stderr, "Encountered error with injection: %s\n", mach_error_string(kr));
         return nil; // Error
     }
     
@@ -524,6 +527,23 @@ NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
     NSLog(@"Got response back %@", resp);
 }
  */
+
+- (SerializedLayerTree *)get_layers {
+    NSData *resp = [self sendCommand:GET_LAYERS withArg:nil];
+    if (!resp) {
+        NSLog(@"Got null resp %@", resp);
+        return nil;
+    }
+    
+    NSError *err = nil;
+    SerializedLayerTree *layerTree = [NSKeyedUnarchiver unarchivedObjectOfClass:[SerializedLayerTree class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return nil;
+    }
+    
+    return layerTree;
+}
 
 - (void)draw_layers {
     NSData *resp = [self sendCommand:GET_LAYERS withArg:nil];

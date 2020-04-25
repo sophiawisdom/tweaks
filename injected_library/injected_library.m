@@ -138,7 +138,7 @@ void async_main() {
         if (command_output == nil) {
             goto end;
         } else if ([command_output length] > MAP_SIZE) {
-            os_log_error(logger, "Data length (%ld) was greater than map size (%ld). Data is %@", [command_output length], MAP_SIZE, command_output);
+            os_log_error(logger, "Data length (%ld) was greater than map size (%d). Data is %@", [command_output length], MAP_SIZE, command_output);
             goto end;
         }
         

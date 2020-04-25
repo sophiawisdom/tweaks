@@ -144,7 +144,7 @@ char injectedCode[] =
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
-task_t inject(task_t remoteTask, const char *lib)
+int inject(task_t remoteTask, const char *lib)
 {
     struct stat buf;
 
@@ -205,6 +205,7 @@ task_t inject(task_t remoteTask, const char *lib)
         possiblePatchLocation++;
 
         if (memcmp(possiblePatchLocation, "PTHRDCRT", 8) == 0) {
+            fprintf(stderr, "pthread create addr is %llu\n", addrOfPthreadCreate);
             memcpy(possiblePatchLocation, &addrOfPthreadCreate, 8);
         }
 
@@ -268,7 +269,7 @@ task_t inject(task_t remoteTask, const char *lib)
     kr = thread_create_running(remoteTask, x86_THREAD_STATE64,
                                (thread_state_t)&remoteThreadState64, x86_THREAD_STATE64_COUNT, &remoteThread);
     if (kr != KERN_SUCCESS) {
-        fprintf(stderr, "Unable to create remote thread: error %s", mach_error_string(kr));
+        fprintf(stderr, "Unable to create remote thread: error %s\n", mach_error_string(kr));
         return (-3);
     }
 
@@ -277,18 +278,19 @@ task_t inject(task_t remoteTask, const char *lib)
     for (;;) {
         kr = thread_get_state(remoteThread, x86_THREAD_STATE64, (thread_state_t)&remoteThreadState64, &thread_state_count);
         if (kr != KERN_SUCCESS) {
-            fprintf(stderr, "Error getting stub thread state: error %s", mach_error_string(kr));
-            break;
+            fprintf(stderr, "Error getting stub thread state: error %s\n", mach_error_string(kr));
+            return kr;
         }
         
         if (remoteThreadState64.__rax == 0xD13) {
             kr = thread_terminate(remoteThread);
             if (kr != KERN_SUCCESS) {
-                fprintf(stderr, "Error terminating stub thread: error %s", mach_error_string(kr));
+                fprintf(stderr, "Error terminating stub thread: error %s\n", mach_error_string(kr));
+                return kr;
             }
             break;
         }
     }
-
-    return remoteTask;
+    
+    return 0;
 }
