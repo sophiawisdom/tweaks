@@ -13,3 +13,5 @@ objc4*
 modified_cricket_source
 images*
 *.tiff
+dylib_stuff*
+test_task_set_state*

@@ -40,40 +40,6 @@ struct ScenekitView : NSViewRepresentable {
         ambientLightNode.name = "ambient light"
         scene.rootNode.addChildNode(ambientLightNode)
         
-        /*
-        let scene = SCNScene(named: "ship.scn")!
-        print("scene is \(scene)")*/
-        
-        /*
-//        let fileUrl = URL(fileURLWithPath: "/users/sophiawisdom/tweaks/layerTree.tiff")
-        let fileUrl = URL(fileURLWithPath: "/users/sophiawisdom/EWcOxMIUYAAyZv4.jpeg")
-        let fileUrl2 = URL(fileURLWithPath: "/users/sophiawisdom/EWWhuoOWAAA9Vdj.jpeg")
-        do  {
-            let imgData = try Data(contentsOf: fileUrl)
-            let imgRep = NSBitmapImageRep(data: imgData)!
-            let img = NSImage(cgImage: imgRep.cgImage!, size: imgRep.size)
-            let layerNode = SCNNode(geometry: SCNPlane(width: img.size.width, height: img.size.height))
-            layerNode.geometry!.firstMaterial!.diffuse.contents! = img
-            layerNode.position = SCNVector3(x: 0, y: 0, z: 0)
-            layerNode.name = "layer"
-            layerNode.isHidden = false
-            
-            let secondImgData = try Data(contentsOf:fileUrl2)
-            let imgRep2 = NSBitmapImageRep(data: secondImgData)!
-            let img2 = NSImage(cgImage: imgRep2.cgImage!, size: imgRep2.size)
-            let layerNode2 = SCNNode(geometry: SCNPlane(width: img2.size.width, height: img2.size.height))
-            layerNode2.geometry!.firstMaterial!.diffuse.contents! = img2
-            layerNode2.position = SCNVector3(x: 0, y: 0, z: -5)
-            layerNode2.name = "second layer"
-            layerNode2.isHidden = false
-            layerNode.addChildNode(layerNode2)
-            
-            
-            scene.rootNode.addChildNode(layerNode)
-        } catch {
-            print("unable to get image data: \(error).")
-        }*/
-        
         scene.rootNode.addChildNode(tree!.node())
 
         // retrieve the SCNView

@@ -112,12 +112,6 @@ os_log_t logger;
 - (void)renderAtPoint:(NSPoint)point {
     point.x += _rect.origin.x;
     point.y += _rect.origin.y;
-    /*
-    NSPoint ourPoint = _rect.origin;
-    NSRect ourRect = _rect;
-    ourRect.origin.x += rect.origin.x;
-    ourRect.origin.y += rect.origin.y;
-    [_img drawInRect:ourRect];*/
     [_img drawAtPoint:point];
     for (SerializedLayerTree *subtree in _sublayers) {
         [subtree renderAtPoint:point];

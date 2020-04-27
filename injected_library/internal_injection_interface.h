@@ -27,7 +27,8 @@ typedef enum {
     GET_WINDOWS,
     GET_IVARS,
     GET_IMAGE_FOR_CLASS,
-    GET_LAYERS
+    GET_LAYERS,
+    DETACH_FROM_PROCESS
 } command_type;
 
 
@@ -49,8 +50,8 @@ typedef enum {
 
 // First bytes of output shmem will be this.
 typedef struct data_out {
-    uint64_t shmem_offset; // Offset from *shmem_loc
-    uint64_t len;
+    int64_t shmem_offset; // Offset from *shmem_loc
+    int64_t len;
 } data_out;
 
 // The first

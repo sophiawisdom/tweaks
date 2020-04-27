@@ -24,7 +24,6 @@
 		6548205C2435417400DE052B /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		655A788F24353E5F00532DFD /* inject.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766B6240B638F00D94665 /* inject.m */; };
 		655A789024353E5F00532DFD /* TWEProcess.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* TWEProcess.m */; };
-		655A789124353E5F00532DFD /* symbol_locator.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.m */; };
 		655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; };
 		655A789324353EF700532DFD /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		658399882454440A00103686 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658399872454440A00103686 /* SwiftUIView.swift */; };
@@ -40,6 +39,7 @@
 		65C187872417928600D42952 /* logging.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C187862417928600D42952 /* logging.h */; };
 		65C5DDC7243EC2970072276D /* libmacho-parser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; };
 		65C5DDC8243EC2970072276D /* libmacho-parser.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 65F1198B240CDEF500C8F55D /* libmacho-parser.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		65D77DB22456D6E70013ADC3 /* symbol_locator.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C6240B6C3900D94665 /* symbol_locator.m */; };
 		65F11996240CDFC400C8F55D /* macho_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 65F11994240CDFC300C8F55D /* macho_parser.h */; };
 		65F11997240CDFC400C8F55D /* macho_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 65F11995240CDFC400C8F55D /* macho_parser.c */; };
 		65F766C1240B67F100D94665 /* injected_library.m in Sources */ = {isa = PBXBuildFile; fileRef = 65F766C0240B67F100D94665 /* injected_library.m */; };
@@ -395,8 +395,6 @@
 				656AC2D9241DA48000B728A6 /* TWEProcess.m */,
 				65F766B5240B638F00D94665 /* inject.h */,
 				65F766B6240B638F00D94665 /* inject.m */,
-				65F766C5240B6C3900D94665 /* symbol_locator.h */,
-				65F766C6240B6C3900D94665 /* symbol_locator.m */,
 			);
 			path = injector_lib;
 			sourceTree = "<group>";
@@ -406,6 +404,8 @@
 			children = (
 				65C0AA54244D1F9E0038202B /* SerializedLayerTree.h */,
 				65C0AA55244D1F9F0038202B /* SerializedLayerTree.m */,
+				65F766C5240B6C3900D94665 /* symbol_locator.h */,
+				65F766C6240B6C3900D94665 /* symbol_locator.m */,
 			);
 			path = shared_lib;
 			sourceTree = "<group>";
@@ -756,7 +756,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				655A789124353E5F00532DFD /* symbol_locator.m in Sources */,
 				655A789024353E5F00532DFD /* TWEProcess.m in Sources */,
 				655A788F24353E5F00532DFD /* inject.m in Sources */,
 			);
@@ -766,6 +765,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65D77DB22456D6E70013ADC3 /* symbol_locator.m in Sources */,
 				65C0AA57244D1F9F0038202B /* SerializedLayerTree.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -11,6 +11,7 @@
 #import <os/log.h>
 #import <objc/runtime.h>
 
+#import "symbol_locator.h"
 #import "internal_injection_interface.h"
 #import "objc_runtime_getters.h"
 #import "logging.h"
@@ -26,6 +27,7 @@ __attribute__((aligned(4096)))
 uint64_t shmem_loc = 0;
 
 os_log_t logger;
+dispatch_queue_t injected_queue;
 
 const struct timespec one_msec = {.tv_sec = 0, .tv_nsec = NSEC_PER_MSEC};
 
@@ -133,6 +135,9 @@ void async_main() {
         
         // We have a message, now to interpret it.
         os_log_debug(logger, "Got new command. cmd is %x\n", command -> cmd);
+        if (command -> cmd == DETACH_FROM_PROCESS) {
+            break;
+        }
         command -> arg.shmem_offset += shmem_loc; // Make suitable for processing
         NSData *command_output = dispatch_command(command);
         if (command_output == nil) {
@@ -154,7 +159,20 @@ end:
         semaphore_signal(sem);
     }
     
+    // This is inneficient because it's designed for remote processes, but it's fine.
+    void * handle = get_dylib_address(mach_task_self(), "/usr/lib/injected/libinjected_library.dylib");
+    // The handle you get back from dlopen() is just the location the dylib was loaded at. We can figure this out by inspecting
+    // the process
+    dlclose(handle);
+    
     os_log(logger, "Exiting process control");
+    os_release(logger);
+    
+    dispatch_release(injected_queue);
+    
+    output = (data_out){.shmem_offset=-1, .len=-1};
+    memcpy(shmem_loc, &output, sizeof(output));
+    semaphore_signal(sem);
 }
 
 // Makes the function run when the library is loaded, so we only have to do
@@ -163,8 +181,8 @@ __attribute__((constructor)) void bain() { // big guy, etc.
     // If we run the event loop in this constructor phase, the dylib is never considered loaded in the process, which
     // isn't a state we want to be in for very long. Instead, we pass off control to dispatch as fast as possible.
      
-     dispatch_queue_t new_queue = dispatch_queue_create("injected_queue", DISPATCH_QUEUE_SERIAL);
-     dispatch_async(new_queue, ^{
+     injected_queue = dispatch_queue_create("injected_queue", DISPATCH_QUEUE_SERIAL);
+     dispatch_async(injected_queue, ^{
          async_main();
      });
 }
