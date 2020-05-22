@@ -8,7 +8,7 @@ In the long term I intend to have a UI based around something similar to the "ca
 
 # Technical description
 
-The main interface between the host and target processes can be found in the [Process class](injector_lib/Process.m). The Process class contains a number of methods that communicate to the target process and call one of the functions defined in [objc_runtime_getters.h](injected_library/objc_runtime_getters.h).
+The main interface between the host and target processes can be found in the [TWEProcess class](injector_lib/TWEProcess.m). The TWEProcess class contains a number of methods that communicate to the target process and call one of the functions defined in [objc_runtime_getters.h](injected_library/objc_runtime_getters.h).
 
 Currently, the main interface to talk to use the functions defined in the Process class is a simple CLI defined [here](daemon.m#L80). Eventually, there will be a UI that uses the Process class as its backend.
 
