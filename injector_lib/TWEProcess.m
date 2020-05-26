@@ -70,6 +70,16 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
                                           // In theory this could collide with an existing one but in practice this is unlikely.
                            _sem,
                            MACH_MSG_TYPE_COPY_SEND); // Semaphores give a send right (b/c receive in kernel)
+    
+    if (kr == KERN_NAME_EXISTS) {
+        mach_port_destroy(_remoteTask, SEM_PORT_NAME);
+        kr = mach_port_insert_right(_remoteTask,
+                               SEM_PORT_NAME, // Static port name (in header). This will be how the target task can access the semaphore.
+                                              // In theory this could collide with an existing one but in practice this is unlikely.
+                               _sem,
+                               MACH_MSG_TYPE_COPY_SEND);
+    }
+    // What is the difference between destroy and destruct? unsure
 
     if (kr == KERN_NAME_EXISTS) { // "name exists" i.e. we have already injected into this process
         fprintf(stderr, "We have already injected into this process. injecting twice isn't supported yet\n");
@@ -143,8 +153,13 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     mach_vm_address_t shmem_sym_addr = _dylib_addr + shmem_sym_offset;
     MACH_CALL(mach_vm_write(_remoteTask, shmem_sym_addr, (vm_offset_t)&_remoteShmemAddress, sizeof(_remoteShmemAddress)));
     
+    int num_waits = 0;
     while (*indicator != 0) { // This will be set to 0 once the target process has initialized. This means it is safe to use the semaphore.
         nanosleep(&one_ms, NULL);
+        if (num_waits++ > 1000) {
+            NSLog(@"Target process has not set indicator correctly, something has gone wrong.");
+            return nil;
+        }
     }
 
     return self;
@@ -155,6 +170,10 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
 // WARNING: data returned from this function will be overwritten when this is called again!
 // If you wish it to be preserved, copy the NSData.
 - (NSData *)sendCommand:(command_type)cmd withArg:(id)arg {
+    if (!_localShmemAddress) {
+        return nil; // can't communicate without shmem buffer
+    }
+    
     NSError *err = nil;
     NSData *serializedData = arg ? [NSKeyedArchiver archivedDataWithRootObject:arg requiringSecureCoding:false error:&err] : nil;
     if (err) {
@@ -163,7 +182,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     // Copy passed arg into the shared memory buffer so the foreign process can access it
-    if ((MAP_SIZE - [serializedData length]) < ARG_OFFSET) {
+    if (serializedData && (MAP_SIZE - [serializedData length]) < ARG_OFFSET) {
         fprintf(stderr, "Passed command of size %lu, which is too large\n", [serializedData length]);
         return nil;
     }
@@ -409,6 +428,20 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     return layerTree;
+}
+
+- (NSBitmapImageRep *)get_window_picture {
+    NSData *resp = [self sendCommand:GET_WINDOW_IMAGE withArg:nil];
+    if (!resp) {
+        NSLog(@"Got null resp %@", resp);
+        return nil;
+    }
+    
+    return [NSBitmapImageRep imageRepWithData:resp];    
+}
+
+- (nullable id)do_invocation:(NSInvocation *)invocation {
+    return [self sendCommand:DO_INVOCATION withArg:invocation];
 }
 
 - (void)dealloc {

@@ -61,6 +61,7 @@ uint64_t getSymbolOffset(const char *dylib, char *symbol) {
     
     uint32_t magic_number;
     read(fd, &magic_number, sizeof magic_number);
+    printf("Magic number is %d\n", magic_number);
     if (check_magic(magic_number)) {
         fprintf(stderr, "[-] not a mach-o binary file.\n");
         return 0;
@@ -90,6 +91,8 @@ uint64_t getSymbolOffset(const char *dylib, char *symbol) {
                 
                 nlist++; // maybe do something clever with initializing this with the for loop
             }
+        } else {
+            printf("got a command of type %d\n", cmd);
         }
         
         current_command = (uint64_t)current_command + current_command -> cmdsize;

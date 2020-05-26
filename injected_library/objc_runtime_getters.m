@@ -292,13 +292,48 @@ NSArray<NSArray<id> *> *getIvars(NSString *class) {
     return arr;
 }
 
-/*
-id callMethod(NSDictionary *options) {
-    NSNumber *objNum = [options objectForKey:@"target"];
-    void * objPtr = [objNum unsignedLongValue];
-    id obj = (__bridge id)objPtr;
-    SEL *selector = sel_registerName([[options objectForKey:@"selector"] UTF8String]);
-    
-    [obj performSelector:selector];
+NSData *get_window_picture() {
+    uint64_t window_number = [[[[NSApplication sharedApplication] windows] firstObject] windowNumber];
+    CGImageRef img = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, window_number, kCGWindowImageBestResolution);
+    if (img == nil) { // sometimes possible. not sure what causes it but simple check
+        return nil;
+    }
+    return [[[NSBitmapImageRep alloc] initWithCGImage:img] TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:2];
 }
- */
+
+static jmp_buf inv_buf;
+
+void handle_segv(int sig) {
+    // As far as I can tell, the question of exactly what functions
+    // can be called in an async function is difficult to answer WRT
+    // POSIX. However, we should be safe as long as execute_invocation
+    // is not being called during exit() or the like (an unlikely scenario).
+    longjmp(inv_buf, 1);
+}
+
+id execute_invocation(NSInvocation * pointer) {
+    // The signal() and setjmp() stuff is necessary because if the NSInvocation's target is nonexistent,
+    // this could throw off a SEGSEGV, which would crash the process.
+    // I'm not very familiar with unix signal handling, so extra comments
+    // to make things clear.
+    
+    // Here we say that when a SIGSEGV happens, call handle_segv.
+    signal(SIGSEGV, handle_segv);
+    
+    // This setjmp() is crucial, because after the signal handler is completed,
+    // execution will continue *at the same pc*, so there's no opportunity to
+    // check or things like this.
+    // setjmp() will first return 0, and then when it is longjmp() is called
+    // with the same jmp_buf argument, it will return the second longjmp() parameter.
+    id retval = nil;
+    if (!setjmp(inv_buf)) {
+        [pointer invoke]; // In the case that this errors, handle_segv is called, which then
+        // brings us back to our setjmp() call, but this time `errored` is true, so we skip
+        // running this again and just return `nil`.
+        [pointer getReturnValue:&retval];
+    }
+    
+    // SIG_DFL == 0, and just works as a signal to set it back to whatever it was before.
+    signal(SIGSEGV, SIG_DFL);
+    return retval;
+}

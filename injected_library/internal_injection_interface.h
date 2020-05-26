@@ -28,7 +28,9 @@ typedef enum {
     GET_IVARS,
     GET_IMAGE_FOR_CLASS,
     GET_LAYERS,
-    DETACH_FROM_PROCESS
+    DETACH_FROM_PROCESS,
+    GET_WINDOW_IMAGE,
+    DO_INVOCATION,
 } command_type;
 
 

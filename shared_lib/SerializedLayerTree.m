@@ -38,96 +38,31 @@ os_log_t logger;
     logger = os_log_create("com.tweaks.injected", "SerializedLayerTree");
 }
 
-- (instancetype)initWithImg:(NSBitmapImageRep *)img rect:(NSRect)rect {
-    if (self = [super init]) {
-        self.img = img;
-//        self.path = path;
-        self.rect = rect;
-    }
-    return self;
-}
-
 - (instancetype)initWithLayer:(CALayer *)layer {
     if (self = [super init]) {
         _layer = layer;
-        _img = [self _drawLayer];
         _rect = [layer frame];
-        self.viewName = NSStringFromClass([[layer delegate] class]);
+        id delegate = [layer delegate];
+        _viewClassName = NSStringFromClass([delegate class]);
+        _viewClassLocation = (__bridge void *)delegate; // for feeding into llvm etc.
+        
         NSMutableArray<SerializedLayerTree *> *sublayers = [[NSMutableArray alloc] init];
         for (CALayer *sublayer in layer.sublayers) {
-            if ([self _isOkLayer:sublayer]) {
-                SerializedLayerTree *serializedSublayer = [[SerializedLayerTree alloc] initWithLayer:sublayer];
-                [sublayers addObject:serializedSublayer];
-            }
+            SerializedLayerTree *serializedSublayer = [[SerializedLayerTree alloc] initWithLayer:sublayer];
+            [sublayers addObject:serializedSublayer];
         }
         _sublayers = [NSArray arrayWithArray:sublayers];
     }
     return self;
 }
 
-- (bool)_isOkLayer:(CALayer *)layer {
-    NSSize frameSize = [layer frame].size;
-    
-    if (frameSize.width * frameSize.height == 0) {
-        os_log_debug(logger, "rejecting layer %@ because width or height is 0", layer);
-        return NO;
+// Draws rect for class in current class
+- (void)drawRectFromPoint:(NSPoint)point scale:(CGFloat)scale {
+    NSPoint newPoint = NSMakePoint(point.x + _rect.origin.x, point.y + _rect.origin.y);
+    NSFrameRect(NSMakeRect((newPoint.x)/scale, (newPoint.y)/scale, (_rect.size.width)/scale, (_rect.size.height)/scale));
+    for (SerializedLayerTree *sublayer in _sublayers) {
+        [sublayer drawRectFromPoint:newPoint scale:scale];
     }
-    
-    if (frameSize.height > 10000 || frameSize.width > 10000) {
-        // Ok so i never quite got why this was but sometimes there are layers that are really big,
-        // like width and height each 2^20 or width 2^22. Trying to draw & serialize those layers
-        // gums up the works and makes the process take 20x longer. If we just skip them, nothing
-        // much is really missed and now this way of doing it is viable.
-        // os_log_info(logger, "encountered really weird layer %{public}@. Layer has frame %{public}@. sublayers are: %{public}@", _layer, CGRectCreateDictionaryRepresentation(_layer.frame), _layer.sublayers);
-        os_log_debug(logger, "rejecting layer %@ because width or height is >10k", layer);
-        return NO;
-    }
-    
-    if (layer.hidden) {
-        os_log_debug(logger, "rejecting layer %@ because layer is hidden", layer);
-        return NO;
-    }
-
-    return YES;
-}
-
-- (NSBitmapImageRep *)_drawLayer {
-    NSSize frameSize = [_layer frame].size;
-    
-    NSBitmapImageRep *img = emptyImageForDrawing(frameSize);
-    NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:img];
-    [NSGraphicsContext setCurrentContext:context];
-    
-    if (_layer.contentsAreFlipped) {
-        CGAffineTransform reverseFlip = CGAffineTransformMake(1, 0, 0, -1, 0, frameSize.height);
-        CGContextConcatCTM(context.CGContext, reverseFlip);
-    }
-    
-    [_layer drawInContext:context.CGContext];
-    [context flushGraphics];
-    
-    return img;
-}
-
-- (void)renderAtPoint:(NSPoint)point {
-    point.x += _rect.origin.x;
-    point.y += _rect.origin.y;
-    [_img drawAtPoint:point];
-    for (SerializedLayerTree *subtree in _sublayers) {
-        [subtree renderAtPoint:point];
-        // [subtree renderInRect:ourRect];
-    }
-}
-
-- (SCNNode *)node {
-    SCNNode *n = [SCNNode nodeWithGeometry:[SCNPlane planeWithWidth:_rect.size.width height:_rect.size.height]];
-    n.position = SCNVector3Make(_rect.origin.x, _rect.origin.y, 5);
-    n.geometry.firstMaterial.diffuse.contents = [[NSImage alloc] initWithCGImage:_img.CGImage size:_img.size];
-    n.name = self.viewName;
-    for (SerializedLayerTree *subtree in _sublayers) {
-        [n addChildNode:[subtree node]];
-    }
-    return n;
 }
 
 #pragma mark <NSSecureCoding> conformance
@@ -139,20 +74,20 @@ os_log_t logger;
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
     if (self = [super init]) {
-        self.img = [NSBitmapImageRep imageRepWithData:[coder decodeObjectOfClass:[NSData class] forKey:@"img"]];
         NSSet<Class> *classes = [NSSet setWithArray:@[[NSArray class], [SerializedLayerTree class]]];
-        self.sublayers = [coder decodeObjectOfClasses:classes forKey:@"sublayers"];
-        self.rect = [coder decodeRectForKey:@"rect"];
-        self.viewName = [coder decodeObjectOfClass:[NSString class] forKey:@"viewName"];
+        _sublayers = [coder decodeObjectOfClasses:classes forKey:@"sublayers"];
+        _rect = [coder decodeRectForKey:@"rect"];
+        _viewClassName = [coder decodeObjectOfClass:[NSString class] forKey:@"viewClassName"];
+        _viewClassLocation = (void *)[coder decodeInt64ForKey:@"viewClassLocation"];
     }
     return self;
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder {
-    [coder encodeObject:[self.img TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:2] forKey:@"img"];
-    [coder encodeObject:self.sublayers forKey:@"sublayers"];
-    [coder encodeRect:self.rect forKey:@"rect"];
-    [coder encodeObject:self.viewName forKey:@"viewName"];
+    [coder encodeObject:_sublayers forKey:@"sublayers"];
+    [coder encodeRect:_rect forKey:@"rect"];
+    [coder encodeObject:_viewClassName forKey:@"viewName"];
+    [coder encodeInt64:(int64_t)_viewClassLocation forKey:@"viewClassLocation"];
 }
 
 @end

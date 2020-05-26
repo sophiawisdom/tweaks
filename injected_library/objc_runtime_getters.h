@@ -11,6 +11,7 @@
 
 @class CALayer;
 @class SerializedLayerTree;
+@class NSBitmapImageRep;
 
 /**
  * This file is bound to the Process API. It represents bindings between the Process API and <objc/runtime.h>
@@ -52,3 +53,8 @@ NSArray<NSArray<id> *> *getIvars(NSString *class);
 NSString *get_image_for_class(NSString *class);
 
 SerializedLayerTree * get_serialized_layers(void);
+
+NSData *get_window_picture(void);
+
+// Will fail if the invocation returns something other than an `id`
+id execute_invocation(NSInvocation * pointer);

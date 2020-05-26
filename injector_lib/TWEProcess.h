@@ -11,6 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class SerializedLayerTree;
+@class NSBitmapImageRep;
 
 @interface TWEProcess : NSObject
 
@@ -61,6 +62,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)draw_layers;
 
 - (nullable SerializedLayerTree *)get_layers;
+
+- (NSBitmapImageRep *)get_window_picture;
+
+- (nullable id)do_invocation:(NSInvocation *)invocation;
 
 @end
 

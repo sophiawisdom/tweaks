@@ -11,16 +11,20 @@ import Combine
 
 
 struct ContentView: View {
-    let tree: SerializedLayerTree?
+    let tree: SerializedLayerTree
+    let window: NSBitmapImageRep
     
     var body: some View {
-        ScenekitView(tree: tree)
+        ImageView(tree: tree, windowImg: window)
+        // Image(window.cgImage!, scale: 4, label: Text("window"))
     }
 }
 
 
+/*
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(tree: nil)
+        ContentView(tree: nil, window:nil)
     }
 }
+ */

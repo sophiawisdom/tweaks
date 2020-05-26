@@ -10,26 +10,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class NSBitmapImageRep;
 @class CALayer;
 @class NSGraphicsContext;
 @class SCNNode;
 
 @interface SerializedLayerTree : NSObject <NSSecureCoding>
 
-@property NSBitmapImageRep *img;
-//@property NSIndexPath *path;
 @property NSRect rect;
+@property NSString *viewClassName;
+@property void *viewClassLocation;
 @property NSArray<SerializedLayerTree *> *sublayers;
-@property NSString *viewName;
 
 - (instancetype)initWithLayer:(CALayer *)layer;
 
-//- (void)renderInRect:(NSRect)rect;
-
-- (void)renderAtPoint:(NSPoint)point;
-
-- (SCNNode *)node;
+- (void)drawRectFromPoint:(NSPoint)point scale:(CGFloat)scale;
 
 @end
 

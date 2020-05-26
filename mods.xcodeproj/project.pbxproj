@@ -26,9 +26,9 @@
 		655A789024353E5F00532DFD /* TWEProcess.m in Sources */ = {isa = PBXBuildFile; fileRef = 656AC2D9241DA48000B728A6 /* TWEProcess.m */; };
 		655A789224353EF700532DFD /* libinjector_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; };
 		655A789324353EF700532DFD /* libinjector_lib.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 655A788624353E5200532DFD /* libinjector_lib.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		658399882454440A00103686 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658399872454440A00103686 /* SwiftUIView.swift */; };
 		65839A4E24546E6500103686 /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65839A4D24546E6500103686 /* SceneKit.framework */; };
 		659F29922446608400B78C44 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659F29912446608400B78C44 /* AppKit.framework */; };
+		65A21E4124693FE3008626D6 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A21E4024693FE3008626D6 /* ImageView.swift */; };
 		65C0AA56244D1F9F0038202B /* SerializedLayerTree.h in Headers */ = {isa = PBXBuildFile; fileRef = 65C0AA54244D1F9E0038202B /* SerializedLayerTree.h */; };
 		65C0AA57244D1F9F0038202B /* SerializedLayerTree.m in Sources */ = {isa = PBXBuildFile; fileRef = 65C0AA55244D1F9F0038202B /* SerializedLayerTree.m */; };
 		65C0AA58244D1FE00038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */; };
@@ -194,10 +194,10 @@
 		655A788624353E5200532DFD /* libinjector_lib.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinjector_lib.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		656AC2D8241DA48000B728A6 /* TWEProcess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TWEProcess.h; sourceTree = "<group>"; };
 		656AC2D9241DA48000B728A6 /* TWEProcess.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TWEProcess.m; sourceTree = "<group>"; };
-		658399872454440A00103686 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		65839A4C245465B000103686 /* process-bridging-header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "process-bridging-header.h"; sourceTree = "<group>"; };
 		65839A4D24546E6500103686 /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		659F29912446608400B78C44 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		65A21E4024693FE3008626D6 /* ImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
 		65C0AA4B244D1F780038202B /* ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = ../../../../../../../../../../usr/lib/injected/libshared_lib.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		65C0AA54244D1F9E0038202B /* SerializedLayerTree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SerializedLayerTree.h; sourceTree = "<group>"; };
 		65C0AA55244D1F9F0038202B /* SerializedLayerTree.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SerializedLayerTree.m; sourceTree = "<group>"; };
@@ -352,7 +352,7 @@
 				65839A4C245465B000103686 /* process-bridging-header.h */,
 				6548202E2435412100DE052B /* AppDelegate.swift */,
 				654820302435412100DE052B /* ContentView.swift */,
-				658399872454440A00103686 /* SwiftUIView.swift */,
+				65A21E4024693FE3008626D6 /* ImageView.swift */,
 				654820322435412500DE052B /* Assets.xcassets */,
 				654820372435412500DE052B /* Main.storyboard */,
 				6548203A2435412500DE052B /* Info.plist */,
@@ -730,9 +730,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65A21E4124693FE3008626D6 /* ImageView.swift in Sources */,
 				654820312435412100DE052B /* ContentView.swift in Sources */,
 				6548202F2435412100DE052B /* AppDelegate.swift in Sources */,
-				658399882454440A00103686 /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

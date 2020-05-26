@@ -18,6 +18,10 @@ NSTimeInterval printTimeSince(NSDate *begin) {
 }
 
 int main(int argc, char **argv) {
+    getSymbolOffset("/Users/sophiawisdom/jtool2/dyld_shared_cache_arm64e", "ATXHistogramTable");
+    
+    return 0;
+    
     printf("Location is %s\n", argv[0]);
     int pid = 0;
 
@@ -115,6 +119,10 @@ int main(int argc, char **argv) {
             NSLog(@"Starting to draw layers. this will take a while.");
             [proc draw_layers];
             NSLog(@"Done drawing layers");
+        } else if ([mainInput isEqualToString:@"get_window"]) {
+            [proc get_window_picture];
+        } else if ([mainInput isEqualToString:@"get_layers"]) {
+            [proc get_layers];
         } else {
             printf("Unknown command\n");
             continue;

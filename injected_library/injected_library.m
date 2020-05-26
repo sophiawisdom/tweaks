@@ -59,6 +59,10 @@ id runCommand(command_type cmd, id input) {
             return get_image_for_class(input);
         case GET_LAYERS:
             return get_serialized_layers();
+        case GET_WINDOW_IMAGE:
+            return get_window_picture();
+        case DO_INVOCATION:
+            return execute_invocation(input);
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;
@@ -166,13 +170,16 @@ end:
     dlclose(handle);
     
     os_log(logger, "Exiting process control");
-    os_release(logger);
     
-    dispatch_release(injected_queue);
+    // Release isn't available, but these are global right now. Guess we'll just leak them.
+    // os_release(logger);
+    // dispatch_release(injected_queue);
     
     output = (data_out){.shmem_offset=-1, .len=-1};
     memcpy(shmem_loc, &output, sizeof(output));
     semaphore_signal(sem);
+    
+    mach_port_deallocate(mach_task_self(), sem);    
 }
 
 // Makes the function run when the library is loaded, so we only have to do

@@ -38,10 +38,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("oh no, proc is nil!")
             return
         }
+        
         let tree = proc.get_layers()!
         print("tree is \(tree)")
+        let img = proc.get_window_picture()
         // Create the SwiftUI view that provides the window contents.
-        let contentView = ContentView(tree: tree)
+        let contentView = ContentView(tree: tree, window:img)
 
         // Create the window and set the content view. 
         window = NSWindow(
