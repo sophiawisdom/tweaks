@@ -30,11 +30,34 @@ struct ImageView_Previews: PreviewProvider {
 
 public class DrawingViewImplementation: NSView {
     let tree: SerializedLayerTree
-    let windowImg: NSBitmapImageRep
+    let drawnImg: NSImage
     
     init(frame frameRect: NSRect, tree: SerializedLayerTree, windowImg: NSBitmapImageRep) {
         self.tree = tree
-        self.windowImg = windowImg
+        
+        let img = NSImage()
+        img.addRepresentation(windowImg)
+        
+        let context = NSGraphicsContext.current!.cgContext
+        
+        img.lockFocus()
+        
+        context.beginPath()
+                
+        tree.drawRect(with: context, from: .zero)
+        
+        context.strokePath()
+        context.flush()
+        context.closePath()
+        
+        img.unlockFocus()
+        self.drawnImg = img
+        
+        do {
+            try img.tiffRepresentation(using: .lzw, factor: 1)!.write(to: URL(fileURLWithPath: "/users/sophiawisdom/tweaks/test.tiff"))
+        } catch {
+            print("oops :)")
+        }
         super.init(frame:frameRect)
         print("hi!")
     }
@@ -45,7 +68,7 @@ public class DrawingViewImplementation: NSView {
     
     public override func draw(_ dirtyRect: NSRect) {
         let frame = self.frame
-        let originalImageAspectRatio = windowImg.size.width/windowImg.size.height
+        let originalImageAspectRatio = drawnImg.size.width/drawnImg.size.height
         let frameAspectRatio = frame.size.width/frame.size.height
         var newSize: NSSize = .zero;
         var scale:CGFloat = 0;
@@ -54,24 +77,23 @@ public class DrawingViewImplementation: NSView {
             // way to do this single-line but i can't access docs
             newSize.height = frame.size.height
             newSize.width = frame.size.height*originalImageAspectRatio
-            scale = windowImg.size.height/frame.size.height
+            scale = drawnImg.size.height/frame.size.height
         } else if ( frameAspectRatio < originalImageAspectRatio) { // image wider than window
             print("frame aspect ratio lesesr")
             newSize.height = frame.size.height*originalImageAspectRatio
             newSize.width = frame.size.width
-            scale = windowImg.size.width/frame.size.width
+            scale = drawnImg.size.width/frame.size.width
         } else {
             print("this is extraordinarily unlikely and wasn't prepared for")
             return
         }
         
         let origFrame = NSMakeRect(frame.origin.x, frame.origin.y, newSize.width, newSize.height)
-        
-        print("frame for our window is \(origFrame), image is \(windowImg.pixelsWide) width and \(windowImg.pixelsHigh) high. Scale is \(scale)")
-        
+                
         print("frame height is \(newSize.height). Overall window height is \(window!.frame.size.height)")
         
-        windowImg.draw(in: origFrame)
+        drawnImg.draw(in: origFrame)
+        // origFrame.frame()
         
         var origin = origFrame.origin
         // origin.x += (window!.frame.size.width)-newSize.height
@@ -79,7 +101,7 @@ public class DrawingViewImplementation: NSView {
         
         print("Backing version of origin: \(self.convertToBacking(origin))")
                                 
-        tree.drawRect(from: self.convertToBacking(origin), scale:scale/2)
+        // tree.drawRect(from: self.convertToBacking(origin), scale:scale/2)
     }
     
     public override func mouseMoved(with event: NSEvent) {

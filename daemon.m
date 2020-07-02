@@ -17,11 +17,7 @@ NSTimeInterval printTimeSince(NSDate *begin) {
     return [injectionEnd timeIntervalSinceDate:begin];
 }
 
-int main(int argc, char **argv) {
-    getSymbolOffset("/Users/sophiawisdom/jtool2/dyld_shared_cache_arm64e", "ATXHistogramTable");
-    
-    return 0;
-    
+int main(int argc, char **argv) {    
     printf("Location is %s\n", argv[0]);
     int pid = 0;
 

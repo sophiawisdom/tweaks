@@ -25,7 +25,7 @@ char *library = "/usr/lib/injected/libinjected_library.dylib";
 char *shmem_symbol = "_shmem_loc";
 
 #define MACH_CALL(kret) if (kret != 0) {\
-printf("Mach call on line %d failed with error #%d \"%s\".\n", __LINE__, kret, mach_error_string(kret));\
+printf("Mach call on line %d of file %s failed with error #%d \"%s\".\n", __LINE__, __FILE__, kret, mach_error_string(kret));\
 return nil;\
 }
 

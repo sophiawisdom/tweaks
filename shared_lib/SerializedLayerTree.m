@@ -14,20 +14,6 @@
 
 #import <SceneKit/SceneKit.h>
 
-NSBitmapImageRep * emptyImageForDrawing(CGSize size) {
-    return [[NSBitmapImageRep alloc]
-     initWithBitmapDataPlanes:NULL
-     pixelsWide:size.width
-     pixelsHigh:size.height
-     bitsPerSample:8
-     samplesPerPixel:4 // with alpha this needs to be 4
-     hasAlpha:YES
-     isPlanar:NO
-     colorSpaceName:NSDeviceRGBColorSpace
-     bytesPerRow:0
-     bitsPerPixel:0];
-}
-
 os_log_t logger;
 
 @implementation SerializedLayerTree {
@@ -44,7 +30,7 @@ os_log_t logger;
         _rect = [layer frame];
         id delegate = [layer delegate];
         _viewClassName = NSStringFromClass([delegate class]);
-        _viewClassLocation = (__bridge void *)delegate; // for feeding into llvm etc.
+        _viewLocation = (__bridge void *)delegate; // for feeding into llvm etc.
         
         NSMutableArray<SerializedLayerTree *> *sublayers = [[NSMutableArray alloc] init];
         for (CALayer *sublayer in layer.sublayers) {
@@ -65,6 +51,14 @@ os_log_t logger;
     }
 }
 
+- (void)drawRectWithContext:(CGContextRef)ref fromPoint:(NSPoint)point {
+    NSRect newRect = NSMakeRect(point.x + _rect.origin.x, point.y + _rect.origin.y, _rect.size.width, _rect.size.height);
+    CGContextAddRect(ref, newRect);
+    for (SerializedLayerTree *sublayer in _sublayers) {
+        [sublayer drawRectWithContext:ref fromPoint:newRect.origin];
+    }
+}
+
 #pragma mark <NSSecureCoding> conformance
 
 + (BOOL)supportsSecureCoding {
@@ -78,7 +72,7 @@ os_log_t logger;
         _sublayers = [coder decodeObjectOfClasses:classes forKey:@"sublayers"];
         _rect = [coder decodeRectForKey:@"rect"];
         _viewClassName = [coder decodeObjectOfClass:[NSString class] forKey:@"viewClassName"];
-        _viewClassLocation = (void *)[coder decodeInt64ForKey:@"viewClassLocation"];
+        _viewLocation = (void *)[coder decodeInt64ForKey:@"viewLocation"];
     }
     return self;
 }
@@ -87,7 +81,7 @@ os_log_t logger;
     [coder encodeObject:_sublayers forKey:@"sublayers"];
     [coder encodeRect:_rect forKey:@"rect"];
     [coder encodeObject:_viewClassName forKey:@"viewName"];
-    [coder encodeInt64:(int64_t)_viewClassLocation forKey:@"viewClassLocation"];
+    [coder encodeInt64:(int64_t)_viewLocation forKey:@"viewLocation"];
 }
 
 @end

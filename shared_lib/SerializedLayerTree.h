@@ -16,14 +16,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SerializedLayerTree : NSObject <NSSecureCoding>
 
-@property NSRect rect;
-@property NSString *viewClassName;
-@property void *viewClassLocation;
-@property NSArray<SerializedLayerTree *> *sublayers;
+@property(readonly) NSRect rect;
+@property(readonly) NSString *viewClassName;
+@property(readonly) void *viewLocation;
+@property(readonly) NSArray<SerializedLayerTree *> *sublayers;
 
 - (instancetype)initWithLayer:(CALayer *)layer;
 
 - (void)drawRectFromPoint:(NSPoint)point scale:(CGFloat)scale;
+
+- (void)drawRectWithContext:(CGContextRef)ref fromPoint:(NSPoint)point;
 
 @end
 
