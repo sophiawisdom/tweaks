@@ -436,8 +436,24 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
         NSLog(@"Got null resp %@", resp);
         return nil;
     }
-    
     return [NSBitmapImageRep imageRepWithData:resp];    
+}
+
+- (CGSize)get_window_size {
+    NSData *resp = [self sendCommand:GET_WINDOW_SIZE withArg:nil];
+    if (!resp) {
+        NSLog(@"Got null resp %@", resp);
+        return CGSizeZero;
+    }
+    
+    NSError *err = nil;
+    NSValue *size = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSValue class] fromData:resp error:&err];
+    if (err) {
+        NSLog(@"Encountered error in deserializing response dictionary: %@", err);
+        return CGSizeZero;
+    }
+    
+    return [size sizeValue];
 }
 
 - (nullable id)do_invocation:(NSInvocation *)invocation {

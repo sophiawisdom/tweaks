@@ -63,6 +63,8 @@ id runCommand(command_type cmd, id input) {
             return get_window_picture();
         case DO_INVOCATION:
             return execute_invocation(input);
+        case GET_WINDOW_SIZE:
+            return get_window_size();
         default:
             os_log_error(logger, "Received command with unknown command_type: %d\n", cmd);
             return nil;

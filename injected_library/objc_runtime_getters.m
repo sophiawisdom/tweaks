@@ -294,11 +294,15 @@ NSArray<NSArray<id> *> *getIvars(NSString *class) {
 
 NSData *get_window_picture() {
     uint64_t window_number = [[[[NSApplication sharedApplication] windows] firstObject] windowNumber];
-    CGImageRef img = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, window_number, kCGWindowImageBestResolution);
+    CGImageRef img = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, window_number, kCGWindowImageBoundsIgnoreFraming);
     if (img == nil) { // sometimes possible. not sure what causes it but simple check
         return nil;
     }
     return [[[NSBitmapImageRep alloc] initWithCGImage:img] TIFFRepresentationUsingCompression:NSTIFFCompressionLZW factor:2];
+}
+
+NSValue *get_window_size() {
+    return [NSValue valueWithSize:get_main_layer().preferredFrameSize];
 }
 
 static jmp_buf inv_buf;

@@ -51,11 +51,16 @@ os_log_t logger;
     }
 }
 
-- (void)drawRectWithContext:(CGContextRef)ref fromPoint:(NSPoint)point {
-    NSRect newRect = NSMakeRect(point.x + _rect.origin.x, point.y + _rect.origin.y, _rect.size.width, _rect.size.height);
+- (void)drawRectWithXScale:(double)x yScale:(double)y {
+    [self drawRectWithContext:[NSGraphicsContext currentContext].CGContext fromPoint:CGPointZero withXScale:x yScale:y];
+}
+
+- (void)drawRectWithContext:(CGContextRef)ref fromPoint:(NSPoint)point withXScale:(double)x yScale:(double)y {
+    NSRect newRect = NSMakeRect(point.x + (_rect.origin.x/x), point.y + (_rect.origin.y/y),( _rect.size.width/x), (_rect.size.height/y));
+    
     CGContextAddRect(ref, newRect);
     for (SerializedLayerTree *sublayer in _sublayers) {
-        [sublayer drawRectWithContext:ref fromPoint:newRect.origin];
+        [sublayer drawRectWithContext:ref fromPoint:newRect.origin withXScale:x yScale:y];
     }
 }
 

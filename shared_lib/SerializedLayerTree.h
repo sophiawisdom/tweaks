@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawRectFromPoint:(NSPoint)point scale:(CGFloat)scale;
 
-- (void)drawRectWithContext:(CGContextRef)ref fromPoint:(NSPoint)point;
+- (void)drawRectWithXScale:(double)x yScale:(double)y;
 
 @end
 

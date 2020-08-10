@@ -65,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSBitmapImageRep *)get_window_picture;
 
+- (CGSize)get_window_size;
+
 - (nullable id)do_invocation:(NSInvocation *)invocation;
 
 @end

@@ -56,5 +56,7 @@ SerializedLayerTree * get_serialized_layers(void);
 
 NSData *get_window_picture(void);
 
+NSValue *get_window_size();
+
 // Will fail if the invocation returns something other than an `id`
 id execute_invocation(NSInvocation * pointer);

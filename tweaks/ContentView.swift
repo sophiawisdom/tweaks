@@ -13,9 +13,10 @@ import Combine
 struct ContentView: View {
     let tree: SerializedLayerTree
     let window: NSBitmapImageRep
+    let windowSize: CGSize
     
     var body: some View {
-        ImageView(tree: tree, windowImg: window)
+        ImageView(tree: tree, windowImg: window, windowSize: windowSize)
         // Image(window.cgImage!, scale: 4, label: Text("window"))
     }
 }

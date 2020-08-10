@@ -11,10 +11,11 @@ import SwiftUI
 struct ImageView: NSViewRepresentable {
     let tree: SerializedLayerTree
     let windowImg: NSBitmapImageRep
+    let windowSize: CGSize
     typealias NSViewType = DrawingViewImplementation
     
     func makeNSView(context: NSViewRepresentableContext<ImageView>) -> ImageView.NSViewType {
-        return DrawingViewImplementation(frame: NSMakeRect(0, 0, CGFloat(windowImg.pixelsWide), CGFloat(windowImg.pixelsHigh)), tree: tree, windowImg: windowImg)
+        return DrawingViewImplementation(frame: NSMakeRect(0, 0, CGFloat(windowImg.pixelsWide), CGFloat(windowImg.pixelsHigh)), tree: tree, windowImg: windowImg, windowSize: windowSize)
     }
     
     func updateNSView(_ nsView: ImageView.NSViewType, context: NSViewRepresentableContext<ImageView>) {
@@ -32,29 +33,38 @@ public class DrawingViewImplementation: NSView {
     let tree: SerializedLayerTree
     let drawnImg: NSImage
     
-    init(frame frameRect: NSRect, tree: SerializedLayerTree, windowImg: NSBitmapImageRep) {
+    init(frame frameRect: NSRect, tree: SerializedLayerTree, windowImg: NSBitmapImageRep, windowSize: CGSize) {
         self.tree = tree
         
-        let img = NSImage()
-        img.addRepresentation(windowImg)
+        let imgSize = windowImg.size
+        let xscale = windowSize.width/imgSize.width
+        let yscale = windowSize.height/imgSize.height
+        
+        let offscreenrep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(imgSize.width), pixelsHigh: Int(imgSize.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bitmapFormat: .alphaFirst, bytesPerRow: 0, bitsPerPixel: 0)!
+        let g = NSGraphicsContext.init(bitmapImageRep: offscreenrep)!
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = g
         
         let context = NSGraphicsContext.current!.cgContext
         
-        img.lockFocus()
+        context.draw(windowImg.cgImage!, in: CGRect(origin: .zero, size: windowImg.size))
         
         context.beginPath()
-                
-        tree.drawRect(with: context, from: .zero)
         
+        tree.drawRect(withXScale: Double(xscale), yScale: Double(yscale))
+        
+        context.closePath()
         context.strokePath()
         context.flush()
-        context.closePath()
         
-        img.unlockFocus()
-        self.drawnImg = img
+        NSGraphicsContext.restoreGraphicsState()
+                
+        self.drawnImg = NSImage(size: imgSize)
+        self.drawnImg.addRepresentation(offscreenrep)
         
         do {
-            try img.tiffRepresentation(using: .lzw, factor: 1)!.write(to: URL(fileURLWithPath: "/users/sophiawisdom/tweaks/test.tiff"))
+            try self.drawnImg.tiffRepresentation(using: .lzw, factor: 1)!.write(to: URL(fileURLWithPath: "/users/sophiawisdom/tweaks/annotated.tiff"))
+            try windowImg.tiffRepresentation(using: .lzw, factor: 1)!.write(to: URL(fileURLWithPath: "/users/sophiawisdom/tweaks/window_img.tiff"))
         } catch {
             print("oops :)")
         }

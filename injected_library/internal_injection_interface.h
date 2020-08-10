@@ -31,6 +31,7 @@ typedef enum {
     DETACH_FROM_PROCESS,
     GET_WINDOW_IMAGE,
     DO_INVOCATION,
+    GET_WINDOW_SIZE
 } command_type;
 
 

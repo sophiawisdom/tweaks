@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #import <os/log.h>
 
 #import "TWEProcess.h"
@@ -119,6 +120,11 @@ int main(int argc, char **argv) {
             [proc get_window_picture];
         } else if ([mainInput isEqualToString:@"get_layers"]) {
             [proc get_layers];
+        } else if ([mainInput isEqualToString:@"get_window_size"]) {
+            CGSize sz = [proc get_window_size];
+            printf("window size: %f wide %f high\n", sz.width, sz.height);
+            NSBitmapImageRep *rep = [proc get_window_picture];
+            printf("Image size: %ld wide %ld high\n", (long)rep.pixelsWide, (long)rep.pixelsHigh);
         } else {
             printf("Unknown command\n");
             continue;
