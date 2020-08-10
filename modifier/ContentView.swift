@@ -9,9 +9,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var pid: pid_t = 0
+    
     var body: some View {
-        Text("Hello, World!")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack {
+            AppInputView()
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

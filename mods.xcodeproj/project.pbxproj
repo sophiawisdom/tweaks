@@ -50,6 +50,8 @@
 		65FCE97F24E14D0500208CB9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 65FCE97D24E14D0500208CB9 /* Main.storyboard */; };
 		65FCE98B24E14D0500208CB9 /* modifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FCE98A24E14D0500208CB9 /* modifierTests.swift */; };
 		65FCE99624E14D0500208CB9 /* modifierUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FCE99524E14D0500208CB9 /* modifierUITests.swift */; };
+		65FCE9A224E14D4B00208CB9 /* PidInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FCE9A124E14D4B00208CB9 /* PidInputView.swift */; };
+		65FCE9A424E1554D00208CB9 /* AppInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FCE9A324E1554D00208CB9 /* AppInputView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -249,6 +251,8 @@
 		65FCE99124E14D0500208CB9 /* modifierUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = modifierUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65FCE99524E14D0500208CB9 /* modifierUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = modifierUITests.swift; sourceTree = "<group>"; };
 		65FCE99724E14D0500208CB9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		65FCE9A124E14D4B00208CB9 /* PidInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PidInputView.swift; sourceTree = "<group>"; };
+		65FCE9A324E1554D00208CB9 /* AppInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInputView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -507,6 +511,8 @@
 			children = (
 				65FCE97424E14D0200208CB9 /* AppDelegate.swift */,
 				65FCE97624E14D0200208CB9 /* ContentView.swift */,
+				65FCE9A124E14D4B00208CB9 /* PidInputView.swift */,
+				65FCE9A324E1554D00208CB9 /* AppInputView.swift */,
 				65FCE97824E14D0500208CB9 /* Assets.xcassets */,
 				65FCE97D24E14D0500208CB9 /* Main.storyboard */,
 				65FCE98024E14D0500208CB9 /* Info.plist */,
@@ -984,6 +990,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				65FCE9A224E14D4B00208CB9 /* PidInputView.swift in Sources */,
+				65FCE9A424E1554D00208CB9 /* AppInputView.swift in Sources */,
 				65FCE97724E14D0200208CB9 /* ContentView.swift in Sources */,
 				65FCE97524E14D0200208CB9 /* AppDelegate.swift in Sources */,
 			);
