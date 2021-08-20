@@ -11,22 +11,23 @@ import Combine
 import AppKit
 
 struct AppInputView: View {
-    @State private var selectedApp: Int = -1
-    @ObservedObject var appObserver = Apps()
+    @ObservedObject private var appObserver = Apps()
+    @Binding var currentApp:pid_t?
     
     var body: some View {
         VStack {
-            Picker(selection: $selectedApp, label: Text("Choose an app, bitch!!! cunt!!!")) {
+            Picker(selection: $currentApp, label: Text("Choose an app, bitch!!! cunt!!!")) {
                 ForEach(appObserver.apps, id: \.self) { app in
                      HStack {
                         Image(nsImage: app.icon!).scaledToFit()
                         Text(app.localizedName!)
-                     }.tag(self.appObserver.apps.firstIndex(of: app)!) // hate this. from here: https://stackoverflow.com/questions/57305372/why-does-binding-to-the-picker-not-work-anymore-in-swiftui
+                     }.tag(app.processIdentifier /*self.appObserver.apps.firstIndex(of: app)!*/) // hate this. from here: https://stackoverflow.com/questions/57305372/why-does-binding-to-the-picker-not-work-anymore-in-swiftui
                 }
             }
-                        
-            if (selectedApp != -1) {
-                Text("You picked \(appObserver.apps[selectedApp].localizedName!)")
+            if currentApp != nil {
+                Text("you choose app \(NSRunningApplication.init(processIdentifier: currentApp!)!.localizedName!)")
+            } else {
+                Text("Current app is nil")
             }
         }
     }
@@ -49,11 +50,5 @@ class Apps: ObservableObject {
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: nil) { (notif) in
             self.apps = self.getApps()
         }
-    }
-}
-
-struct AppInputView_Previews: PreviewProvider {
-    static var previews: some View {
-        AppInputView()
     }
 }

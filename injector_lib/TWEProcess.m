@@ -56,6 +56,7 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
     }
     
     mach_error_t kr = task_for_pid(mach_task_self(), pid, &_remoteTask);
+    printf("task_for_pid for pid %d returns %d. remote task is %d\n", pid, kr, _remoteTask);
     if (kr != KERN_SUCCESS) {
         if (getuid() != 0) {
             fprintf(stderr, "task_for_pid call failed (error %s) due to not running as root. euid is %d", mach_error_string(kr), getuid());
@@ -70,7 +71,8 @@ const struct timespec one_ms = {.tv_sec = 0, .tv_nsec = 1 * NSEC_PER_MSEC};
                                           // In theory this could collide with an existing one but in practice this is unlikely.
                            _sem,
                            MACH_MSG_TYPE_COPY_SEND); // Semaphores give a send right (b/c receive in kernel)
-    
+    printf("initial insert attempt return %s %d\n", mach_error_string(kr), kr, KERN_NAME_EXISTS);
+
     if (kr == KERN_NAME_EXISTS) {
         mach_port_destroy(_remoteTask, SEM_PORT_NAME);
         kr = mach_port_insert_right(_remoteTask,

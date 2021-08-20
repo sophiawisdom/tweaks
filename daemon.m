@@ -5,9 +5,9 @@
 #import <AppKit/AppKit.h>
 #import <os/log.h>
 
-#import "TWEProcess.h"
+#import "injector_lib/TWEProcess.h"
 
-#import "macho_parser.h"
+#import "macho_parser/macho_parser.h"
 
 // TODO: mount -uw / + killall Finder every time the app launches so we can create "usr/lib/injection" and put all our stuff there
 // Be clear that the reason why is to get around potential sandboxing issues, especially prevalent with platform binaries.
@@ -109,6 +109,10 @@ int main(int argc, char **argv) {
             };
             NSLog(@"Got back result: %@", [proc replace_methods:@[switc]]);
         } else if ([mainInput isEqualToString:@"get_ivars"]) {
+            if ([words count] < 2) {
+                printf("need to know what ivar to get...\n");
+                continue;
+            }
             NSLog(@"Ivars are: %@", [proc get_ivars:[words objectAtIndex:1]]);
         } else if ([mainInput isEqualToString:@"get_image_for_class"]) {
             NSLog(@"image is: %@", [proc get_image_for_class:[words objectAtIndex:1]]);

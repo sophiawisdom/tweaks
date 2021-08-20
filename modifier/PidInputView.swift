@@ -32,9 +32,3 @@ struct PidInputView: View {
         }
     }
 }
-
-struct PidInputView_Previews: PreviewProvider {
-    static var previews: some View {
-        AppInputView()
-    }
-}

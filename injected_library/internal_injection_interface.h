@@ -45,7 +45,7 @@ typedef enum {
 #define NEW_OUT_DATA 0x87654321
 
 // TODO: consider changing this to be randomly generated per shared_inj build
-#define SEM_PORT_NAME 0x83452 // Randomly generated port name. This will be how the target task can access the semaphore
+#define SEM_PORT_NAME 0x834522 // Randomly generated port name. This will be how the target task can access the semaphore
 
 // Full 4GB, so it's large enough for full TIFF layer outputs.
 // No real cost to making it larger - memory won't be used unless we write to it.

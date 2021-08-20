@@ -7,13 +7,20 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @State private var pid: pid_t = 0
+    @State private var currentApp:pid_t?
     
     var body: some View {
         VStack {
-            AppInputView()
+            AppInputView(currentApp: $currentApp)
+            if currentApp != nil {
+                Text("current app is \(currentApp!)")
+            } else {
+                Text("no current app yet")
+            }
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

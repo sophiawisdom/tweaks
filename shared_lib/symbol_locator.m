@@ -17,11 +17,11 @@
 #import <Foundation/Foundation.h>
 
 #define MACH_CALL(kret, critical) if (kret != 0) {\
-printf("Mach call on line %d failed with error \"%s\".\n", __LINE__, mach_error_string(kret));\
+printf("Mach call on line %d of file %s failed with error \"%s\".\n", __LINE__, __FILE__, mach_error_string(kret));\
 if (critical) {exit(1);}\
 }
 
-unsigned char * readProcessMemory (task_t task, mach_vm_address_t addr, mach_msg_type_number_t *size) {
+unsigned char * readProcessMemory(task_t task, mach_vm_address_t addr, mach_msg_type_number_t *size) {
     vm_offset_t readMem;
     // Use vm_read, rather than mach_vm_read, since the latter is different
     // in iOS.
