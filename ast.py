@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/williamwisdom/cfe-8.0.0.src/bindings/python")
+sys.path.append("/Users/sophiawisdom/cfe-8.0.0.src/bindings/python")
 
 import os
 import subprocess
